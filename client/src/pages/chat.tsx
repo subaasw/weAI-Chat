@@ -1,10 +1,15 @@
+import { useEffect, useRef, useState } from "react";
+import { LinkIcon, LogOut, Send } from "lucide-react";
+import { useNavigate } from "react-router";
+import { fetchSSE } from "@/utils/serverCall";
+import { CHAT_URL } from "@/utils/api-constant";
+
 import ChatMessage from "@/components/chat-message";
 import LinkScrapingIndicator from "@/components/link-scraping-indicator";
 import { Button } from "@/components/ui/button";
 // import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { LinkIcon, LogOut, Send } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/context/AuthProvider";
 
 type Message = {
   id: string;
@@ -15,7 +20,7 @@ type Message = {
 type ScrapingStatus = {
   inProgress: boolean;
   urls: string[];
-  completed: string[];
+  completed_urls: string[];
 };
 
 export default function ChatPage() {
@@ -25,27 +30,13 @@ export default function ChatPage() {
   const [scrapingStatus, setScrapingStatus] = useState<ScrapingStatus>({
     inProgress: false,
     urls: [],
-    completed: [],
+    completed_urls: [],
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  // const router = useRouter()
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check if user is authenticated
-    const checkAuth = async () => {
-      try {
-        const res = await fetch("/api/auth/check");
-        if (!res.ok) {
-          // router.push("/")
-        }
-      } catch (error) {
-        //   router.push("/")
-      }
-    };
-
-    checkAuth();
-  }, []);
+  const { logout, user } = useAuth();
 
   useEffect(() => {
     scrollToBottom();
@@ -56,12 +47,12 @@ export default function ChatPage() {
   };
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    // router.push("/");
+    await logout();
+    navigate("/login");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const simpleChat = async (e: React.FormEvent) => {
+    e?.preventDefault();
     if (!input.trim()) return;
 
     const userMessage: Message = {
@@ -74,90 +65,44 @@ export default function ChatPage() {
     setInput("");
     setIsLoading(true);
 
-    try {
-      // Extract URLs from the message
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const urls = input.match(urlRegex) || [];
+    const responseId = Date.now().toString() + "-response";
+    const assistantMessage: Message = {
+      id: responseId,
+      content: "",
+      role: "assistant",
+    };
 
-      if (urls.length > 0) {
-        setScrapingStatus({
-          inProgress: true,
-          urls,
-          completed: [],
+    setMessages((prev) => [...prev, assistantMessage]);
+
+    await fetchSSE(
+      CHAT_URL,
+      input,
+      (data, urls_config) => {
+        setMessages((prev) => {
+          return prev.map((msg) =>
+            msg.id === responseId
+              ? { ...msg, content: msg?.content + data }
+              : msg
+          );
         });
-      }
 
-      // Set up SSE connection
-      const eventSource = new EventSource(
-        `/api/chat?message=${encodeURIComponent(input)}`
-      );
-
-      let responseContent = "";
-      const responseId = Date.now().toString() + "-response";
-
-      // Add empty assistant message
-      setMessages((prev) => [
-        ...prev,
-        { id: responseId, content: "", role: "assistant" },
-      ]);
-
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-
-          if (data.type === "scraping_update") {
-            setScrapingStatus((prev) => ({
-              ...prev,
-              completed: [...prev.completed, data.url],
-            }));
-          } else if (data.type === "scraping_complete") {
-            setScrapingStatus((prev) => ({
-              ...prev,
-              inProgress: false,
-            }));
-          } else if (data.type === "content") {
-            responseContent += data.content;
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === responseId
-                  ? { ...msg, content: responseContent }
-                  : msg
-              )
-            );
-          }
-        } catch (error) {
-          console.error("Error parsing SSE data:", error);
+        if (urls_config) {
+          setScrapingStatus({
+            inProgress: urls_config?.inProgress || false,
+            urls: urls_config?.urls || [""],
+            completed_urls: urls_config?.completed_urls || [""],
+          });
         }
-      };
-
-      eventSource.onerror = () => {
-        eventSource.close();
+      },
+      () => {
         setIsLoading(false);
-        setScrapingStatus({
+        setScrapingStatus((prev) => ({
+          ...prev,
           inProgress: false,
-          urls: [],
-          completed: [],
-        });
-      };
-
-      eventSource.addEventListener("done", () => {
-        eventSource.close();
-        setIsLoading(false);
-        setScrapingStatus({
-          inProgress: false,
-          urls: [],
-          completed: [],
-        });
-      });
-    } catch (error) {
-      console.error("Error sending message:", error);
-      setIsLoading(false);
-      setScrapingStatus({
-        inProgress: false,
-        urls: [],
-        completed: [],
-      });
-    }
+          urls: prev.urls,
+        }));
+      }
+    );
   };
 
   return (
@@ -176,7 +121,7 @@ export default function ChatPage() {
         </div>
       </header>
 
-      <div className="flex-1 px-3 py-6 overflow-y-auto w-full">
+      <div className="flex-1 px-3 py-6 overflow-y-auto w-full mb-2">
         <div className="mx-auto max-w-2xl space-y-3 h-full">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-400">
@@ -184,7 +129,10 @@ export default function ChatPage() {
                 <LinkIcon className="h-6 w-6" />
               </div>
               <p className="text-center text-md max-w-xs">
-                Start a conversation or paste links to analyze content.
+                <strong className="font-medium pb-4 text-lg">
+                  Hello {user?.username || "User"} 👋
+                </strong>{" "}
+                <br /> Start a conversation or paste links to analyze content.
               </p>
             </div>
           ) : (
@@ -195,14 +143,14 @@ export default function ChatPage() {
           {scrapingStatus.inProgress && (
             <LinkScrapingIndicator
               urls={scrapingStatus.urls}
-              completed={scrapingStatus.completed}
+              completed={scrapingStatus.completed_urls}
             />
           )}
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t bg-white">
+      <form onSubmit={simpleChat} className="p-4 border-t bg-white">
         <div className="max-w-2xl mx-auto flex items-center space-x-2">
           <Textarea
             value={input}

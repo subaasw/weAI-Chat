@@ -1,3 +1,6 @@
+import { AUTH_URL } from "@/utils/api-constant";
+import { deleteRequest } from "@/utils/serverCall";
+import { userLogin } from "@/utils/userAuth";
 import {
   useState,
   useEffect,
@@ -8,7 +11,8 @@ import {
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  user: Record<string, any> | null;
+  userLogin: (username: string, password: string) => Promise<Response>;
   logout: () => void;
 }
 
@@ -16,44 +20,38 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem("gemini-chat-token");
+    const checkAuth = async () => {
+      const token = localStorage.getItem("session_token");
+      const userData = localStorage.getItem("user");
+
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
       setIsAuthenticated(!!token);
     };
 
     checkAuth();
   }, []);
 
-  const login = async (
-    username: string,
-    password: string
-  ): Promise<boolean> => {
-    try {
-      // For demo purposes, we're using hardcoded credentials
-      if (username === "admin" && password === "password") {
-        localStorage.setItem("gemini-chat-token", "demo-token");
-        setIsAuthenticated(true);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Login error:", error);
-      return false;
-    }
-  };
+  const logout = async () => {
+    await deleteRequest(AUTH_URL.logout);
 
-  const logout = () => {
-    localStorage.removeItem("gemini-chat-token");
+    localStorage.removeItem("session_token");
+    localStorage.removeItem("user");
     setIsAuthenticated(false);
   };
 
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const values = {
+    isAuthenticated,
+    userLogin,
+    logout,
+    user,
+  };
+
+  return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

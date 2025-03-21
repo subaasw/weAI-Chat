@@ -9,7 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { userRegister } from "@/utils/userAuth";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
@@ -17,7 +18,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  //   const router = useRouter();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,22 +32,18 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await userRegister(username, password, confirmPassword);
 
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.message || "Registration failed");
       }
 
-      //   router.push("/chat");
+      setTimeout(() => {
+        navigate("/chat");
+      }, 1000);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.error);
     } finally {
       setLoading(false);
     }

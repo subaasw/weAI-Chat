@@ -22,7 +22,7 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { userLogin } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,9 +30,11 @@ function LoginForm() {
     setError("");
 
     try {
-      const success = await login(username, password);
-      if (success) {
-        navigate("/");
+      const { ok } = await userLogin(username, password);
+      if (ok) {
+        setTimeout(() => {
+          navigate("/chat");
+        }, 1000);
       } else {
         setError("Invalid credentials");
       }

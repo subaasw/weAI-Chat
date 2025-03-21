@@ -11,17 +11,23 @@ npm run dev
 ```
 
 ### For Backend
-- Firstly create a virtual environment inside the api
+- Firstly create a virtual environment
 
 ```bash
-python3 -m venv .venv
+python3 -m venv .venv && source .venv/bin/activate
 ```
 
 - Install FastAPI
 ```bash
-.venv/bin/python -m pip install fastapi[standard]
+pip install fastapi[standard] 
 
 ```
+
+```bash
+.venv/bin/python -m pip install fastapi[standard] 
+
+```
+
 
 - Run It
 ```bash

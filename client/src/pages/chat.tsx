@@ -130,8 +130,8 @@ export default function ChatPage() {
               </div>
               <p className="text-center text-md max-w-xs">
                 <strong className="font-medium pb-4 text-lg">
-                  Hello {user?.username || "User"} 👋
-                </strong>{" "}
+                  Hello {user?.username || ""} 👋
+                </strong>
                 <br /> Start a conversation or paste links to analyze content.
               </p>
             </div>

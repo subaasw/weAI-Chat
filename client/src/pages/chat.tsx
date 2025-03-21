@@ -157,7 +157,7 @@ export default function ChatPage() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask anything..."
             disabled={isLoading}
-            rows={8}
+            rows={3}
             className="flex-1 resize-none"
           />
 

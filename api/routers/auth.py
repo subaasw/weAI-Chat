@@ -83,10 +83,12 @@ async def register(registerForm: UserRegisterModel, request: Request, response: 
             content={"error": password }
         )
     
-    with open("./data/users.csv", "+r") as file:
+    with open("./data/users.csv", "r+") as file:
         reader = csv.reader(file)
         writer = csv.writer(file)
-        lastValue = file.readlines()[-1].split(",")
+
+        users = file.readlines()
+        lastValue = users[-1].strip() if users[-1].strip() else users(len(users) - 1) #users[len(users) - 1] if not users[-1].strip("\n") else users[-1].strip("\n")
 
         for user in reader:
             if user[1] == username:
@@ -94,8 +96,8 @@ async def register(registerForm: UserRegisterModel, request: Request, response: 
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     content={"error": "user already exits!"}
                 )
-            
-        user_id = int(lastValue[0])+1
+        
+        user_id = int(lastValue.split(",")[0].strip())+1
 
         writer.writerow([user_id, username, password])
     
@@ -121,9 +123,6 @@ async def register(registerForm: UserRegisterModel, request: Request, response: 
 async def userLogout(response: Response):
     await remove_session(response)
     return {"msg": "logout successfully"}
-
-# @auth_router.post("/crawer")
-# async def crawler
 
 @auth_router.post("/chat")
 async def chatBot(request: Request):

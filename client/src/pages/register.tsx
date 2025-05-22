@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import AuthService from "@/utils/userAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,16 +11,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Link, useNavigate } from "react-router";
-import { userRegister } from "@/utils/userAuth";
+import { Label } from "@/components/ui/label";
 
 export default function RegisterPage() {
-  const [username, setUsername] = useState("");
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,8 +34,12 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await userRegister(username, password, confirmPassword);
-
+      const response = await AuthService.register(
+        email,
+        fullName,
+        password,
+        confirmPassword
+      );
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.message || "Registration failed");
@@ -66,28 +72,44 @@ export default function RegisterPage() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="space-y-1">
-                  <label
-                    htmlFor="username"
+                  <Label
+                    htmlFor="fullName"
                     className="text-sm font-medium text-slate-700"
                   >
-                    Username
-                  </label>
+                    Full Name
+                  </Label>
                   <Input
-                    id="username"
+                    id="fullName"
                     type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                     required
                     className="w-full focus:animate-pulse"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label
+                  <Label
+                    htmlFor="email"
+                    className="text-sm font-medium text-slate-700"
+                  >
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full focus:animate-pulse"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label
                     htmlFor="password"
                     className="text-sm font-medium text-slate-700"
                   >
                     Password
-                  </label>
+                  </Label>
                   <Input
                     id="password"
                     type="password"

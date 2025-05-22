@@ -55,4 +55,4 @@ async def register(user: UserRegisterModel, session: SessionDep, response: Respo
     cookieManager.set_cookie(response, token)
 
     del new_user.password
-    return {"user": new_user, "token": token}
+    return new_user

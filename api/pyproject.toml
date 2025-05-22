@@ -8,6 +8,7 @@ dependencies = [
     "bcrypt>=4.3.0",
     "crawl4ai>=0.6.3",
     "fastapi[standard]>=0.115.12",
+    "google-genai>=1.16.1",
     "mysql-connector-python>=9.3.0",
     "pyjwt>=2.10.1",
     "sqlmodel>=0.0.24",

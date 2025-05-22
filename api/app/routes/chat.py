@@ -1,17 +1,19 @@
 import uuid
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Response, Request, status 
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import StreamingResponse 
 from sqlmodel import Session, select
 
 from core.schema import CreateChatMessageModel, UserChatMessagesModel
 from core.db import get_session
 from core.db.models import Conversations, ChatMessages
+from services.chat_with_gemini import chat_with_gemini_stream
 
 chat_router = APIRouter(prefix="/chat")
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
-@chat_router.post("/")
+@chat_router.post("")
 async def create_chat(chat: CreateChatMessageModel, session: SessionDep, request: Request):
     user_ctx = request.state.user
 
@@ -22,7 +24,7 @@ async def create_chat(chat: CreateChatMessageModel, session: SessionDep, request
     
     conversation = Conversations(user_id=user_ctx.id, title="New Chat")
     session.add(conversation)
-    Session.commit()
+    session.commit()
     session.refresh(conversation)
 
     if not conversation.id:
@@ -36,7 +38,9 @@ async def create_chat(chat: CreateChatMessageModel, session: SessionDep, request
     session.commit()
     session.refresh(userMessage)
 
-    return userMessage
+    return StreamingResponse(chat_with_gemini_stream(chat.message), media_type="text/event-stream")
+
+    # return userMessage
 
 
 @chat_router.post("/{conversationId}")

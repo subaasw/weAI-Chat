@@ -1,57 +1,53 @@
 import serverCall, { postRequest } from "@/utils/serverCall";
-import { AUTH_URL } from "./api-constant";
+import { AuthEndpoints } from "./api-constant";
+import { UserProps } from "@/types/userAuth";
 
-async function userLogin(username: string, password: string) {
-  const res = await postRequest(AUTH_URL.login, { username, password });
-  const data = await res.json();
+export default class AuthService {
+  static async login(email: string, password: string): Promise<Response> {
+    const res = await postRequest(AuthEndpoints.login, { email, password });
+    if (!res.ok) return res;
 
-  if (data?.token) {
-    localStorage.setItem("session_token", data.token);
+    const data: UserProps = await res.json();
+
+    setTimeout(() => {
+      if (data.id && data.email) {
+        localStorage.setItem("user", JSON.stringify(data));
+      }
+    }, 500);
+    return res;
   }
 
-  if (data?.user_id) {
-    localStorage.setItem(
-      "user",
-      JSON.stringify({ user_id: data.user_id, username: data.username })
-    );
+  static async register(
+    email: string,
+    fullName: string,
+    password: string,
+    confirmPassword: string
+  ): Promise<Response> {
+    const res = await postRequest(AuthEndpoints.register, {
+      fullName,
+      email,
+      password,
+      confirmPassword,
+    });
+    if (!res.ok) return res;
+
+    const data: UserProps = await res.json();
+
+    setTimeout(() => {
+      if (data.id && data.email) {
+        localStorage.setItem("user", JSON.stringify(data));
+      }
+    }, 500);
+
+    return res;
   }
 
-  return res;
-}
-
-async function userRegister(
-  username: string,
-  password: string,
-  confirm_password: string
-) {
-  const res = await postRequest(AUTH_URL.register, {
-    username,
-    password,
-    confirm_password,
-  });
-  const data = await res.json();
-
-  setTimeout(() => {
-    if (data?.token) {
-      localStorage.setItem("session_token", data.token);
+  static async fetchCurrent(): Promise<UserProps> {
+    const res = await serverCall(AuthEndpoints.me);
+    if (!res.ok) {
+      throw new Error("Failed to fetch current user");
     }
-
-    if (data?.user_id) {
-      localStorage.setItem(
-        "user",
-        JSON.stringify({ user_id: data.user_id, username: data.username })
-      );
-    }
-  }, 500);
-
-  return res;
+    const data: UserProps = await res.json();
+    return data;
+  }
 }
-
-async function currentUserInfo() {
-  const res = await serverCall(AUTH_URL.me);
-  const data: { id: Number; username: string } = await res.json();
-
-  return data;
-}
-
-export { userLogin, userRegister, currentUserInfo };

@@ -1,6 +1,3 @@
-import { AUTH_URL } from "@/utils/api-constant";
-import { deleteRequest } from "@/utils/serverCall";
-import { userLogin } from "@/utils/userAuth";
 import {
   useState,
   useEffect,
@@ -9,10 +6,15 @@ import {
   type ReactNode,
 } from "react";
 
+import { UserProps } from "@/types/userAuth";
+import { AuthEndpoints } from "@/utils/api-constant";
+import serverCall, { deleteRequest } from "@/utils/serverCall";
+import AuthService from "@/utils/userAuth";
+
 interface AuthContextType {
   isAuthenticated: boolean;
   user: Record<string, any> | null;
-  userLogin: (username: string, password: string) => Promise<Response>;
+  userLogin: (email: string, password: string) => Promise<Response>;
   logout: () => void;
 }
 
@@ -20,36 +22,45 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<Record<string, any> | null>(null);
+  const [user, setUser] = useState<UserProps | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem("session_token");
-      const userData = localStorage.getItem("user");
-
-      if (userData) {
-        setUser(JSON.parse(userData));
+      try {
+        const response = await serverCall(AuthEndpoints.me);
+        const userData = await response.json();
+        if (userData) {
+          localStorage.setItem("user", JSON.stringify(userData));
+          setUser(userData);
+        }
+        setIsAuthenticated(!!userData?.id);
+      } catch (e) {
+        console.error("fetch user error", e);
+      } finally {
+        setIsLoading(false);
       }
-      setIsAuthenticated(!!token);
     };
 
     checkAuth();
   }, []);
 
   const logout = async () => {
-    await deleteRequest(AUTH_URL.logout);
-
-    localStorage.removeItem("session_token");
+    await deleteRequest(AuthEndpoints.logout);
     localStorage.removeItem("user");
     setIsAuthenticated(false);
   };
 
   const values = {
     isAuthenticated,
-    userLogin,
+    userLogin: AuthService.login,
     logout,
     user,
   };
+
+  if (isLoading) {
+    return null;
+  }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
 };

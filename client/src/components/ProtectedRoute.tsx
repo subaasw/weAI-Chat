@@ -1,13 +1,14 @@
 import type React from "react";
-import type { ReactNode } from "react";
 import { Navigate } from "react-router";
+import { useAuth } from "@/context/AuthProvider";
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  if (!localStorage.getItem("session_token")) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

@@ -2,12 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { LinkIcon, LogOut, Send } from "lucide-react";
 import { useNavigate } from "react-router";
 import { fetchSSE } from "@/utils/serverCall";
-import { CHAT_URL } from "@/utils/api-constant";
+import { ChatEndpoints } from "@/utils/api-constant";
 
 import ChatMessage from "@/components/chat-message";
 import LinkScrapingIndicator from "@/components/link-scraping-indicator";
 import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthProvider";
 
@@ -75,7 +74,7 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, assistantMessage]);
 
     await fetchSSE(
-      CHAT_URL,
+      ChatEndpoints.base,
       input,
       (data, urls_config) => {
         setMessages((prev) => {
@@ -130,7 +129,7 @@ export default function ChatPage() {
               </div>
               <p className="text-center text-md max-w-xs">
                 <strong className="font-medium pb-4 text-lg">
-                  Hello {user?.username || ""} 👋
+                  Hello {user?.name || ""} 👋
                 </strong>
                 <br /> Start a conversation or paste links to analyze content.
               </p>

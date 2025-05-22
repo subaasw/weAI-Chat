@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router";
-// import { MessageSquare } from "lucide-react";
-import { useAuth } from "@/context/AuthProvider";
-// import { cn } from "@/lib/utils";
 
+import { useAuth } from "@/context/AuthProvider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,10 +12,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui/label";
 
 function LoginForm() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +28,7 @@ function LoginForm() {
     setError("");
 
     try {
-      const { ok } = await userLogin(username, password);
+      const { ok } = await userLogin(email, password);
       if (ok) {
         setTimeout(() => {
           navigate("/chat");
@@ -56,28 +54,28 @@ function LoginForm() {
       <CardContent>
         <form onSubmit={handleLogin} className="space-y-3">
           <div className="space-y-1">
-            <label
-              htmlFor="username"
+            <Label
+              htmlFor="email"
               className="text-sm font-medium text-slate-700"
             >
-              Username
-            </label>
+              Email
+            </Label>
             <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full focus:animate-pulse"
             />
           </div>
           <div className="space-y-1">
-            <label
+            <Label
               htmlFor="password"
               className="text-sm font-medium text-slate-700"
             >
               Password
-            </label>
+            </Label>
             <Input
               id="password"
               type="password"

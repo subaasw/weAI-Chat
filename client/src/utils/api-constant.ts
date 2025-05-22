@@ -1,12 +1,17 @@
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-const AUTH_URL = {
-  login: BASE_URL + "/login",
-  register: BASE_URL + "/register",
-  me: BASE_URL + "/user/me",
-  logout: BASE_URL + "/logout"
+const getFullURL = (path: string) => BASE_URL + path;
+
+const AuthEndpoints = {
+  login: getFullURL("/login"),
+  register: getFullURL("/register"),
+  me: getFullURL("/user/me"),
+  logout: getFullURL("/user/logout"),
 };
 
-const CHAT_URL = BASE_URL + "/chat";
+const ChatEndpoints = {
+  base: getFullURL("/chat"),
+  conversation: (id: string) => getFullURL(`/${id}/conversation`),
+};
 
-export { BASE_URL, AUTH_URL, CHAT_URL };
+export { BASE_URL, AuthEndpoints, ChatEndpoints };

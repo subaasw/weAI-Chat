@@ -1,10 +1,19 @@
 export type userLoginProps = {
-  username: string;
+  email: string;
   password: string;
 };
 
 export type userRegisterProps = {
-  username: string;
+  email: string;
+  fullName: string;
   password: string;
-  confirm_password: string;
+  confirmPassword: string;
 };
+
+export interface UserProps {
+  id: string;
+  name: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+}

@@ -1,7 +1,8 @@
+from datetime import datetime, timedelta
+
 from fastapi import status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from datetime import datetime, timedelta
 
 class RateLimitingMiddleware(BaseHTTPMiddleware):
     RATE_LIMIT_DURATION = timedelta(seconds=1)

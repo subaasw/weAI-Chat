@@ -3,12 +3,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Response, status 
 from sqlmodel import Session, select
 
-from app.core.db import get_session
-from app.helpers.password import create_hash_Password, verify_hash_password
-from app.helpers.tokens import generate_token
-from app.core.schema import UserLoginModel, UserRegisterModel
-from app.helpers.cookie import CookieManager
-from app.core.db.models import Users
+from core.db import get_session
+from helpers.password import create_hash_Password, verify_hash_password
+from helpers.tokens import generate_token
+from core.schema import UserLoginModel, UserRegisterModel
+from helpers.cookie import CookieManager
+from core.db.models import Users
 
 auth_router = APIRouter()
 SessionDep = Annotated[Session, Depends(get_session)]

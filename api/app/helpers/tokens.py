@@ -1,7 +1,7 @@
 import jwt
 from datetime import datetime, timedelta, timezone
 
-from app.core.config import JWT_SECRET_KEY
+from core.config import JWT_SECRET_KEY
 
 def generate_token(user_id: str) -> str:
     current_time = datetime.now(timezone.utc)

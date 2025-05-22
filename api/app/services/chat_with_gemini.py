@@ -1,7 +1,7 @@
 import json 
 
 from google import genai
-from api.app.core.config import GEMINI_API_KEY
+from core.config import GEMINI_API_KEY
 from urlextract import URLExtract
 
 import asyncio

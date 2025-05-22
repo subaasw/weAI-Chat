@@ -1,36 +1,20 @@
-# WeAI Chat
-Chatbot using Gemini API
+# WeAI Chat 
 
-## Run the project
+LLM Chatbot System with RAG and Web Crawling
 
-### For frontend
+## Run the Project
+
+### Frontend
 ```bash
 cd client
-npm i 
+npm install
 npm run dev
 ```
 
-### For Backend
-- Firstly create a virtual environment
+### Backend
+
+Go to the [API directory](./api) and follow the steps below:
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-```
-
-- Install FastAPI
-```bash
-pip install fastapi[standard] 
-
-```
-
-```bash
-.venv/bin/python -m pip install fastapi[standard] 
-
-```
-
-
-- Run It
-```bash
-fastapi dev main.py
-
+cd api
 ```

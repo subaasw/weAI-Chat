@@ -2,10 +2,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.middleware.rate_limit import RateLimitingMiddleware
-from app.routes import routes
-from app.core.db import create_db_and_tables
-from app.core.config import APP_URL
+from middleware.rate_limit import RateLimitingMiddleware
+from routes import routes
+from core.db import create_db_and_tables
+from core.config import APP_URL
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

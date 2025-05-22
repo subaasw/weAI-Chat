@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from .auth import auth_router
 from .users import user_router
-from app.middleware import autheticate
+from middleware import autheticate
 
 routes = APIRouter(prefix="/v1", tags=["v1"])
 

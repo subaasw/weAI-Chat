@@ -1,14 +1,12 @@
-import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response, Request, status 
 from sqlmodel import Session, select
 
-from app.core.db import get_session
-from app.helpers.tokens import verify_token
-from app.helpers.cookie import CookieManager
-from app.core.db.models import Users
-from app.core.schema import UserUpdateProfile
+from core.db import get_session
+from helpers.cookie import CookieManager
+from core.db.models import Users
+from core.schema import UserUpdateProfile
 
 user_router = APIRouter(prefix="/user")
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -21,7 +19,7 @@ async def update_profile(
     session: SessionDep,
 ):
     uctx = request.state.user
-    
+
     statement = select(Users).where(Users.id == uctx.id)
     user_record = session.exec(statement).one_or_none()
     if not user_record:
@@ -54,7 +52,9 @@ async def update_profile(
 
 @user_router.get("/me")
 async def current_user(request: Request):
-    user = request.state.user    
+    user = request.state.user
+
+    del user.password
     return user
 
 @user_router.delete("/logout")

@@ -15,11 +15,16 @@ source .venv/bin/activate
 
 ### 3. Install Packages
 ```bash
-uv run .
+uv sync
 ```
 
 ### 4. Crawl4AI Setup
 ```bash
 crawl4ai-setup
+```
+
+### Run project
+```bash
+fastapi dev app/main.py
 ```
 

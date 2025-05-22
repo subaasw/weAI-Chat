@@ -1,10 +1,18 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from routers.auth import auth_router
-from starlette.middleware.sessions import SessionMiddleware
 from fastapi.middleware.cors import CORSMiddleware
-from config import SECRET_KEY, APP_URL
 
-app = FastAPI()
+from app.middleware.rate_limit import RateLimitingMiddleware
+from app.routes import routes
+from app.core.db import create_db_and_tables
+from app.core.config import APP_URL
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
+
+app = FastAPI(title="WeChat AI", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,6 +22,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, max_age=3200, same_site="none;Secure")
-
-app.include_router(auth_router, prefix="/v1", tags=["v1"])
+app.add_middleware(RateLimitingMiddleware)
+app.include_router(routes)

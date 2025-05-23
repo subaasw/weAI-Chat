@@ -16,6 +16,7 @@ async def autheticate(
     token = cookie_manager.read_cookie(request)
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
     uid = verify_token(token)
     if not uid:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)

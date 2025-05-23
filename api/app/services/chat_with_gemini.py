@@ -1,34 +1,12 @@
-import json 
-
-from google import genai
-from core.config import GEMINI_API_KEY
-from urlextract import URLExtract
+import json
 
 import asyncio
-from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
+from google import genai
 
-extractor = URLExtract()
+from core.config import GEMINI_API_KEY
+from .crawler import extractor, crawl_and_stream_urls
+
 client = genai.Client(api_key=GEMINI_API_KEY)
-
-browser_cfg = BrowserConfig(
-    headless=True,
-    text_mode=True,
-)
-
-run_config = CrawlerRunConfig(
-    cache_mode=CacheMode.BYPASS,
-    excluded_tags=["a", "nav", "header", "footer", "aside", "script", "style", "img", "svg", "i"],
-    exclude_external_links=True,
-    stream=True,
-)
-
-async def crawl_and_stream_urls(url):
-    async with AsyncWebCrawler(config=browser_cfg) as crawler:
-        result = await crawler.arun(
-            url=url,
-            config=run_config
-        )
-        return result.markdown[:300]
 
 def chat_with_gemini_stream(message: str):
     urls = extractor.find_urls(message)
@@ -63,7 +41,7 @@ def chat_with_gemini_stream(message: str):
                 },
                 "text": result
             })
-    
+
     for chunk in client.models.generate_content_stream(
         model="gemini-2.0-flash", contents = scrapped_data if urls else message,
     ):

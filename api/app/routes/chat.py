@@ -13,6 +13,18 @@ chat_router = APIRouter(prefix="/chat")
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
+def add_chat_messege_to_db(session: Session, conversation_id: str, botResponse: str):
+    if not botResponse:
+        return
+    
+    botMesssage = Conversations(conversation_id=conversation_id, sender="bot", content=botResponse)
+
+    session.add(botMesssage)
+    session.commit()
+    session.refresh(botMesssage)
+
+    return botMesssage
+
 @chat_router.post("")
 async def create_chat(chat: CreateChatMessageModel, session: SessionDep, request: Request):
     user_ctx = request.state.user
@@ -39,9 +51,6 @@ async def create_chat(chat: CreateChatMessageModel, session: SessionDep, request
     session.refresh(userMessage)
 
     return StreamingResponse(chat_with_gemini_stream(chat.message), media_type="text/event-stream")
-
-    # return userMessage
-
 
 @chat_router.post("/{conversationId}")
 async def conversation_chat(conversationId: str, chat: UserChatMessagesModel, session: SessionDep, request: Request):

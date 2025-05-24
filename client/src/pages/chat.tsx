@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { LinkIcon, LogOut, Send } from "lucide-react";
 import { useNavigate } from "react-router";
 import { fetchSSE } from "@/utils/serverCall";
+import ChatService from "@/utils/chat";
 import { ChatEndpoints } from "@/utils/api-constant";
 
 import ChatMessage from "@/components/chat-message";
@@ -44,6 +45,10 @@ export default function ChatPage() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  useLayoutEffect(() => {
+    ChatService.getConversations();
+  }, []);
 
   const handleLogout = async () => {
     await logout();

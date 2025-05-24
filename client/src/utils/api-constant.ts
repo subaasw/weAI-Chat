@@ -11,7 +11,10 @@ const AuthEndpoints = {
 
 const ChatEndpoints = {
   base: getFullURL("/chat"),
-  conversation: (id: string) => getFullURL(`/${id}/conversation`),
+  conversation: {
+    all: getFullURL("/chat/conversations"),
+    single: (id: string) => getFullURL(`/${id}/conversation`),
+  },
 };
 
 export { BASE_URL, AuthEndpoints, ChatEndpoints };

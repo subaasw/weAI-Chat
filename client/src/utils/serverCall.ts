@@ -35,10 +35,11 @@ async function fetchSSE(
   message: string,
   onMessage: (
     data: string,
-    urls_config?: {
+    configs?: {
       inProgress?: boolean;
       completed_urls?: string[];
       urls?: string[];
+      conversationId?: string;
     }
   ) => void,
   onStreamDone: () => void
@@ -64,7 +65,9 @@ async function fetchSSE(
       try {
         const JsonData = JSON.parse(value);
 
-        if (JsonData?.urls_config || JsonData?.text) {
+        if (JsonData?.conversationId) {
+          onMessage("", JsonData);
+        } else if (JsonData?.urls_config || JsonData?.text) {
           onMessage(JsonData?.text, JsonData?.urls_config);
         }
       } catch (e) {

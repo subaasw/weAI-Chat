@@ -1,15 +1,17 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { LinkIcon, LogOut, Send } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, Outlet } from "react-router";
+import { LinkIcon, Send } from "lucide-react";
 import { fetchSSE } from "@/utils/serverCall";
-import ChatService from "@/utils/chat";
 import { ChatEndpoints } from "@/utils/api-constant";
 
+import { useAuth } from "@/context/AuthProvider";
+import AppHeader from "@/components/app-header";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 import ChatMessage from "@/components/chat-message";
 import LinkScrapingIndicator from "@/components/link-scraping-indicator";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/context/AuthProvider";
 
 type Message = {
   id: string;
@@ -23,7 +25,26 @@ type ScrapingStatus = {
   completed_urls: string[];
 };
 
+function ChatEmptyState() {
+  const { user } = useAuth();
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-slate-400">
+      <div className="mb-3 p-3 rounded-full bg-slate-100">
+        <LinkIcon className="h-6 w-6" />
+      </div>
+      <p className="text-center text-md max-w-xs">
+        <strong className="font-medium pb-4 text-lg">
+          Hello {user?.name || ""} 👋
+        </strong>
+        <br /> Start a conversation or paste links to analyze content.
+      </p>
+    </div>
+  );
+}
+
 export default function ChatPage() {
+  const navigate = useNavigate();
+  const [conversationId, setConversationId] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -34,9 +55,6 @@ export default function ChatPage() {
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-
-  const { logout, user } = useAuth();
 
   useEffect(() => {
     scrollToBottom();
@@ -46,16 +64,7 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useLayoutEffect(() => {
-    ChatService.getConversations();
-  }, []);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
-
-  const simpleChat = async (e: React.FormEvent) => {
+  const handleOnSubmit = async (e: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim()) return;
 
@@ -91,6 +100,10 @@ export default function ChatPage() {
         });
 
         if (urls_config) {
+          if (urls_config?.conversationId) {
+            setConversationId(urls_config.conversationId);
+            return;
+          }
           setScrapingStatus({
             inProgress: urls_config?.inProgress || false,
             urls: urls_config?.urls || [""],
@@ -109,36 +122,24 @@ export default function ChatPage() {
     );
   };
 
+  useEffect(() => {
+    if (conversationId && !isLoading) {
+      navigate(`/chat/${conversationId}`, { replace: false });
+    }
+  }, [conversationId, isLoading]);
+
   return (
-    <div className="flex flex-col h-screen bg-slate-50">
-      <header className="p-3 border-b bg-white">
-        <div className="max-w-3xl mx-auto flex justify-between items-center">
-          <h1 className="text-lg font-medium text-slate-800">WeAI Chat</h1>
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className="text-slate-600"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Logout</span>
-          </Button>
-        </div>
-      </header>
+    <SidebarProvider
+      className="flex flex-col h-screen bg-slate-50"
+      defaultOpen={false}
+    >
+      <AppSidebar />
+      <AppHeader />
 
       <div className="flex-1 px-3 py-6 overflow-y-auto w-full mb-2">
         <div className="mx-auto max-w-2xl space-y-3 h-full">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400">
-              <div className="mb-3 p-3 rounded-full bg-slate-100">
-                <LinkIcon className="h-6 w-6" />
-              </div>
-              <p className="text-center text-md max-w-xs">
-                <strong className="font-medium pb-4 text-lg">
-                  Hello {user?.name || ""} 👋
-                </strong>
-                <br /> Start a conversation or paste links to analyze content.
-              </p>
-            </div>
+            <ChatEmptyState />
           ) : (
             messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
@@ -154,7 +155,7 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <form onSubmit={simpleChat} className="p-4 border-t bg-white">
+      <form onSubmit={handleOnSubmit} className="p-4 border-t bg-white">
         <div className="max-w-2xl mx-auto flex items-center space-x-2">
           <Textarea
             value={input}
@@ -175,6 +176,6 @@ export default function ChatPage() {
           </Button>
         </div>
       </form>
-    </div>
+    </SidebarProvider>
   );
 }

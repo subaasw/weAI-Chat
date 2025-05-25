@@ -4,6 +4,10 @@ import RegisterPage from "./pages/register";
 import ChatPage from "./pages/chat";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+const ChatLayout = ({ children }: { children: React.ReactNode }) => {
+  return <ProtectedRoute>{children}</ProtectedRoute>;
+};
+
 export default function RoutingPages() {
   return (
     <Routes>
@@ -12,11 +16,15 @@ export default function RoutingPages() {
       <Route
         path="/chat"
         element={
-          <ProtectedRoute>
+          <ChatLayout>
             <ChatPage />
-          </ProtectedRoute>
+          </ChatLayout>
         }
-      />
+      >
+        <Route index element={<></>} />
+        <Route path=":conversationId" element={<></>} />
+      </Route>
+
       <Route path="/" element={<Navigate to="/login" replace />} />
     </Routes>
   );

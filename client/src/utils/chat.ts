@@ -1,13 +1,23 @@
 import serverCall from "@/utils/serverCall";
+import { ConversationTypes } from "@/types/chat";
 import { ChatEndpoints } from "./api-constant";
 
 export default class ChatService {
-  static async getConversations(): Promise<Response> {
+  static async getConversations(): Promise<ConversationTypes[]> {
     const res = await serverCall(ChatEndpoints.conversation.all);
 
-    const output = await res.json();
-    console.log("Conversations", output);
+    const conversations: ConversationTypes[] = await res.json();
+    return conversations;
+  }
 
-    return res;
+  static async getMessages(
+    conversationId: string
+  ): Promise<ConversationTypes[]> {
+    const res = await serverCall(
+      ChatEndpoints.conversation.single(conversationId)
+    );
+
+    const output: ConversationTypes[] = await res.json();
+    return output;
   }
 }

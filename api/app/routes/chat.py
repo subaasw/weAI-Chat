@@ -1,3 +1,4 @@
+import json
 import uuid
 from typing import Annotated
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
@@ -49,7 +50,9 @@ async def create_chat(chat: CreateChatMessageModel, session: SessionDep, request
     session.commit()
     session.refresh(userMessage)
 
-    def event_generator():
+    def event_generator(conversationId):
+        yield json.dumps({"conversationId": str(conversationId)})
+
         full_response = ""
         for chunk in chat_with_gemini_stream(chat.message):
             text = chunk
@@ -58,7 +61,10 @@ async def create_chat(chat: CreateChatMessageModel, session: SessionDep, request
 
         background_tasks.add_task(add_chat_messege_to_db, session, conversation.id, full_response)
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(conversation.id),
+        media_type="text/event-stream"
+    )
 
 @chat_router.get("/conversations")
 async def fetch_conversations(session: SessionDep, request: Request):
@@ -69,7 +75,7 @@ async def fetch_conversations(session: SessionDep, request: Request):
 
     return conversations
 
-@chat_router.post("/{conversationId}")
+@chat_router.put("/{conversationId}")
 async def conversation_chat(conversationId: str, chat: UserChatMessagesModel, session: SessionDep, request: Request):
     userctx = request.state.user
 
@@ -95,3 +101,30 @@ async def conversation_chat(conversationId: str, chat: UserChatMessagesModel, se
     session.refresh(userMessage)
 
     return userMessage
+
+@chat_router.get("/{conversationId}/messages")
+async def conversation_chat(conversationId: str, session: SessionDep, request: Request):
+    userctx = request.state.user
+
+    statement = select(ChatMessages).where(Conversations.user_id == userctx.id, ChatMessages.conversation_id == uuid.UUID(conversationId))
+    messages = session.exec(statement).fetchmany()
+
+    if not messages:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="conversations not found"
+        )
+
+    return messages
+
+@chat_router.delete("/{conversationId}")
+async def conversation_chat(conversationId: str, session: SessionDep, request: Request):
+    userctx = request.state.user
+
+    statement = select(Conversations).where(Conversations.user_id == userctx.id, Conversations.id == uuid.UUID(conversationId))
+    conversation = session.exec(statement).one()
+
+    session.delete(conversation)
+    session.commit()
+
+    return {"message": "deleted successfully!"}

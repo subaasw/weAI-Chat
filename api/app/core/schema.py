@@ -37,6 +37,9 @@ class UserChatMessagesModel(BaseModel):
 class ConversationCreateModel(BaseModel):
     title: Optional[str] = None
 
+class ConversationRenameModel(BaseModel):
+    title: str
+
 class ConversationModel(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID

@@ -1,38 +1,8 @@
-import { RequestOptions } from "@/types/serverCall";
+import { postRequest } from "./serverCall";
 
-const serverCall = async (
-  URL: string,
-  options: RequestOptions = { method: "GET" }
-): Promise<Response> => {
-  return await fetch(URL, {
-    credentials: "include",
-    ...options,
-  });
-};
-
-const postRequest = async (
-  URL: string,
-  data: Record<string, unknown> = {}
-): Promise<Response> => {
-  return await serverCall(URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-
-    body: JSON.stringify(data),
-  });
-};
-
-const deleteRequest = async (URL: string): Promise<Response> => {
-  return await serverCall(URL, {
-    method: "DELETE",
-  });
-};
-
-async function fetchSSE(
+export async function fetchSSE(
   url: string,
-  message: string,
+  data: any,
   onMessage: (
     data: string,
     configs?: {
@@ -44,9 +14,7 @@ async function fetchSSE(
   ) => void,
   onStreamDone: () => void
 ) {
-  const response = await postRequest(url, {
-    message,
-  });
+  const response = await postRequest(url, data);
 
   if (!response.ok || !response.body) {
     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -80,6 +48,3 @@ async function fetchSSE(
     reader.releaseLock();
   }
 }
-
-export default serverCall;
-export { postRequest, deleteRequest, fetchSSE };

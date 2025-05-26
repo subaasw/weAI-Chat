@@ -1,53 +1,34 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, Outlet } from "react-router";
-import { LinkIcon, Send } from "lucide-react";
-import { fetchSSE } from "@/utils/serverCall";
-import { ChatEndpoints } from "@/utils/api-constant";
-
-import { useAuth } from "@/context/AuthProvider";
-import AppHeader from "@/components/app-header";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import ChatMessage from "@/components/chat-message";
-import LinkScrapingIndicator from "@/components/link-scraping-indicator";
+import { useState, useRef, useEffect } from "react";
+import { useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Send } from "lucide-react";
+import ChatMessage from "@/components/chat-message";
+import LinkScrapingIndicator from "@/components/link-scraping-indicator";
+import { fetchSSE } from "@/lib/fetch-sse";
+import ChatService from "@/utils/chat";
+import { ChatMessageRequest } from "@/types/chat";
+import { ChatEndpoints } from "@/utils/api-constant";
 
-type Message = {
-  id: string;
-  content: string;
-  role: "user" | "assistant";
-};
-
-type ScrapingStatus = {
+interface ScrapingStatus {
   inProgress: boolean;
   urls: string[];
   completed_urls: string[];
-};
-
-function ChatEmptyState() {
-  const { user } = useAuth();
-  return (
-    <div className="flex flex-col items-center justify-center h-full text-slate-400">
-      <div className="mb-3 p-3 rounded-full bg-slate-100">
-        <LinkIcon className="h-6 w-6" />
-      </div>
-      <p className="text-center text-md max-w-xs">
-        <strong className="font-medium pb-4 text-lg">
-          Hello {user?.name || ""} 👋
-        </strong>
-        <br /> Start a conversation or paste links to analyze content.
-      </p>
-    </div>
-  );
 }
 
-export default function ChatPage() {
-  const navigate = useNavigate();
-  const [conversationId, setConversationId] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
+type History = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export default function ConversationPage() {
+  const params = useParams();
+  const conversationId = params.conversationId as string;
+
+  const [messages, setMessages] = useState<ChatMessageRequest[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [scrapingStatus, setScrapingStatus] = useState<ScrapingStatus>({
     inProgress: false,
     urls: [],
@@ -55,6 +36,28 @@ export default function ChatPage() {
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        setIsLoadingMessages(true);
+        const messages = await ChatService.getMessages(conversationId);
+
+        if (Array.isArray(messages)) {
+          setMessages(messages);
+        }
+      } catch (error) {
+        console.error("Failed to fetch messages:", error);
+        setMessages([]);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    };
+
+    if (conversationId) {
+      fetchMessages();
+    }
+  }, [conversationId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -68,10 +71,10 @@ export default function ChatPage() {
     e?.preventDefault();
     if (!input.trim()) return;
 
-    const userMessage: Message = {
+    const userMessage: ChatMessageRequest = {
       id: Date.now().toString(),
       content: input,
-      role: "user",
+      sender: "user",
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -79,17 +82,22 @@ export default function ChatPage() {
     setIsLoading(true);
 
     const responseId = Date.now().toString() + "-response";
-    const assistantMessage: Message = {
+    const assistantMessage: ChatMessageRequest = {
       id: responseId,
       content: "",
-      role: "assistant",
+      sender: "assistant",
     };
 
     setMessages((prev) => [...prev, assistantMessage]);
 
+    const historyMessages: History[] = [];
+    for (let msg of messages) {
+      historyMessages.push({ role: msg.sender, content: msg.content });
+    }
+
     await fetchSSE(
-      ChatEndpoints.base,
-      input,
+      ChatEndpoints.conversation.single(conversationId),
+      { message: input, history: historyMessages },
       (data, urls_config) => {
         setMessages((prev) => {
           return prev.map((msg) =>
@@ -100,10 +108,6 @@ export default function ChatPage() {
         });
 
         if (urls_config) {
-          if (urls_config?.conversationId) {
-            setConversationId(urls_config.conversationId);
-            return;
-          }
           setScrapingStatus({
             inProgress: urls_config?.inProgress || false,
             urls: urls_config?.urls || [""],
@@ -122,24 +126,22 @@ export default function ChatPage() {
     );
   };
 
-  useEffect(() => {
-    if (conversationId && !isLoading) {
-      navigate(`/chat/${conversationId}`, { replace: false });
-    }
-  }, [conversationId, isLoading]);
+  if (isLoadingMessages) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-slate-400">Loading conversation...</div>
+      </div>
+    );
+  }
 
   return (
-    <SidebarProvider
-      className="flex flex-col h-screen bg-slate-50"
-      defaultOpen={false}
-    >
-      <AppSidebar />
-      <AppHeader />
-
+    <>
       <div className="flex-1 px-3 py-6 overflow-y-auto w-full mb-2">
         <div className="mx-auto max-w-2xl space-y-3 h-full">
           {messages.length === 0 ? (
-            <ChatEmptyState />
+            <div className="flex items-center justify-center h-full text-slate-400">
+              <p>No messages in this conversation yet.</p>
+            </div>
           ) : (
             messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
@@ -176,6 +178,6 @@ export default function ChatPage() {
           </Button>
         </div>
       </form>
-    </SidebarProvider>
+    </>
   );
 }

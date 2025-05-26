@@ -13,7 +13,7 @@ const ChatEndpoints = {
   base: getFullURL("/chat"),
   conversation: {
     all: getFullURL("/chat/conversations"),
-    single: (id: string) => getFullURL(`/${id}/conversation`),
+    single: (id: string) => getFullURL(`/chat/${id}`),
   },
 };
 

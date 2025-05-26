@@ -17,7 +17,6 @@ def generate_token(user_id: str) -> str:
 def verify_token(token: str) -> str:
     try:
         decode = jwt.decode(token, key=JWT_SECRET_KEY, algorithms=["HS256"])
-        print("decoded", decode, type(decode))
         return str(decode.get("uid", ""))
     except:
         return ""

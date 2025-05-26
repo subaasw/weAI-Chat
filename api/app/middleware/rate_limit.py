@@ -5,8 +5,8 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 class RateLimitingMiddleware(BaseHTTPMiddleware):
-    RATE_LIMIT_DURATION = timedelta(seconds=1)
-    RATE_LIMIT_REQUESTS = 5
+    RATE_LIMIT_DURATION = timedelta(seconds=30)
+    RATE_LIMIT_REQUESTS = 50
 
     def __init__(self, app):
         super().__init__(app)

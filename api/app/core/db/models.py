@@ -10,7 +10,7 @@ from sqlmodel import (
     Field,
     Column,
     Relationship,
-    UniqueConstraint,
+    Text,
     String,
     DateTime
 )
@@ -59,17 +59,16 @@ class Conversations(TimeStampMixin, table=True):
 
 class Sender(str, Enum):
     user = "user"
-    bot = "bot"
+    assistant = "assistant"
 
 
 class ChatMessages(TimeStampMixin, table=True):
     __tablename__ = "chat_messages"
-    __table_args__ = (UniqueConstraint("conversation_id"),)
 
     id: str = Field(default_factory=make_short_id, primary_key=True, index=True)
     conversation_id: uuid.UUID = Field(foreign_key="conversations.id", nullable=False)
     sender: Sender = Field(nullable=False)
-    content: str = Field(nullable=False)
+    content: str = Field(sa_column=Column(Text, nullable=False))
 
     conversation: Optional[Conversations] = Relationship(back_populates="messages")
 

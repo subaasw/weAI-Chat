@@ -1,4 +1,4 @@
-import serverCall, { postRequest } from "@/utils/serverCall";
+import serverCall, { postRequest } from "@/lib/serverCall";
 import { AuthEndpoints } from "./api-constant";
 import { UserProps } from "@/types/userAuth";
 

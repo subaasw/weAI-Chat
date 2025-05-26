@@ -1,23 +1,23 @@
-import { cn } from "@/lib/utils";
-import { Avatar } from "@/components/ui/avatar";
+import ReactMarkdown from "react-markdown";
 import { User, Bot } from "lucide-react";
-import ReactMarkdown from "react-markdown"
+import { cn } from "@/lib/utils";
+import { ChatMessageRequest } from "@/types/chat";
+import { Avatar } from "@/components/ui/avatar";
 
 type MessageProps = {
-  message: {
-    content: string;
-    role: "user" | "assistant";
-  };
+  message: ChatMessageRequest;
 };
 
 export default function ChatMessage({ message }: MessageProps) {
-  const isUser = message.role === "user";
+  const isUser = message.sender === "user";
 
   return (
     <div
       className={cn(
         "flex items-start gap-2 w-full",
-        isUser ? "justify-start ml-auto flex-row-reverse animate-messageIn max-w-lg" : "animate-fadeIn max-w-2xl pr-10"
+        isUser
+          ? "justify-start ml-auto flex-row-reverse animate-messageIn max-w-lg"
+          : "animate-fadeIn max-w-2xl pr-10"
       )}
     >
       <Avatar

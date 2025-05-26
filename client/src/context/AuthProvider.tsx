@@ -8,7 +8,7 @@ import {
 
 import { UserProps } from "@/types/userAuth";
 import { AuthEndpoints } from "@/utils/api-constant";
-import serverCall, { deleteRequest } from "@/utils/serverCall";
+import serverCall, { deleteRequest } from "@/lib/serverCall";
 import AuthService from "@/utils/userAuth";
 
 interface AuthContextType {

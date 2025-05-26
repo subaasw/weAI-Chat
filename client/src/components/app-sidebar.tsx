@@ -1,5 +1,6 @@
 "use client";
 import { useLayoutEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
 
 import {
   Plus,
@@ -12,6 +13,12 @@ import {
   PanelLeftClose,
   Search,
 } from "lucide-react";
+import { ConversationTypes } from "@/types/chat";
+import {
+  ConversationEditWidgetProps,
+  ConversationMenuItemProps,
+} from "@/types/sidebar";
+import ChatService from "@/utils/chat";
 
 import {
   Sidebar,
@@ -44,34 +51,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import ChatService from "@/utils/chat";
-import { ConversationTypes } from "@/types/chat";
-
-interface AppSidebarProps {
-  activeConversation: string;
-  onConversationChange: (id: string) => void;
-}
-
-type ConversationEditWidgetProps = {
-  editTitle: string;
-  setEditTitle: (title: string) => void;
-  handleCancelEdit: () => void;
-  handleSaveEdit: () => void;
-};
-
-type ConversationMenuItemProps = {
-  activeConversation: string;
-  conversation: ConversationTypes;
-  openDropdownId: string | null;
-  handleConversationClick: (id: string) => void;
-  handleMoreOptionsClick: (
-    e: React.MouseEvent<HTMLButtonElement>,
-    id: string
-  ) => void;
-  handleEdit: (id: string, title: string) => void;
-  handleDeleteClick: (id: string) => void;
-  handleDropdownOpenChange: (open: boolean, conversationId: string) => void;
-};
 
 function ConversationEditWidget({
   editTitle,
@@ -112,20 +91,24 @@ function ConversationEditWidget({
 }
 
 function ConversationMenuItem({
-  activeConversation,
   conversation,
   openDropdownId,
-  handleConversationClick,
   handleDeleteClick,
   handleEdit,
   handleMoreOptionsClick,
   handleDropdownOpenChange,
 }: ConversationMenuItemProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const menuLink = `/chat/${conversation.id}`;
+  const isActive = location.pathname === menuLink;
+
   return (
     <div className="relative group/item">
       <SidebarMenuButton
         asChild
-        isActive={activeConversation === conversation.id}
+        isActive={isActive}
         className={`w-full transition-all duration-200 py-1 ${
           openDropdownId === conversation.id ||
           (typeof window !== "undefined" &&
@@ -135,7 +118,7 @@ function ConversationMenuItem({
             ? "pr-10"
             : ""
         }`}
-        onClick={() => handleConversationClick(conversation.id)}
+        onClick={() => navigate(menuLink)}
       >
         <div className="flex cursor-pointer">
           <span className="truncate text-sm text-gray-700 font-medium">
@@ -199,10 +182,9 @@ function ConversationMenuItem({
   );
 }
 
-export function AppSidebar({
-  activeConversation,
-  onConversationChange,
-}: AppSidebarProps) {
+export function AppSidebar() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { toggleSidebar } = useSidebar();
   const [conversations, setConversations] = useState<ConversationTypes[]>([]);
 
@@ -223,17 +205,9 @@ export function AppSidebar({
   );
 
   const handleNewChat = () => {
-    const newId = Date.now().toString();
-    const newConversation: ConversationTypes = {
-      id: newId,
-      title: "New Conversation",
-      created_at: "Just now",
-    };
-    setConversations((prev) => [newConversation, ...prev]);
-    onConversationChange(newId);
-    setOpenDropdownId(null);
     setShowSearch(false);
     setSearchQuery("");
+    navigate("/chat/new");
   };
 
   const handleEdit = (id: string, currentTitle: string) => {
@@ -242,13 +216,15 @@ export function AppSidebar({
     setOpenDropdownId(null);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editingId && editTitle.trim()) {
       setConversations((prev) =>
         prev.map((conv) =>
           conv.id === editingId ? { ...conv, title: editTitle.trim() } : conv
         )
       );
+
+      await ChatService.renameConversation(editingId, editTitle);
     }
     setEditingId(null);
     setEditTitle("");
@@ -265,28 +241,20 @@ export function AppSidebar({
     setOpenDropdownId(null);
   };
 
-  const handleDeleteConfirm = () => {
-    if (conversationToDelete) {
-      console.log("Deleting conversation:", conversationToDelete);
-      setConversations((prev) =>
-        prev.filter((conv) => conv.id !== conversationToDelete)
-      );
+  const handleDeleteConfirm = async () => {
+    if (!conversationToDelete) return;
 
-      if (conversationToDelete === activeConversation) {
-        const remaining = conversations.filter(
-          (conv) => conv.id !== conversationToDelete
-        );
-        if (remaining.length > 0) {
-          onConversationChange(remaining[0].id);
-        }
-      }
+    setConversations((prev) =>
+      prev.filter((conv) => conv.id !== conversationToDelete)
+    );
+
+    await ChatService.removeConversation(conversationToDelete);
+
+    if (location.pathname === `/chat/${conversationToDelete}`) {
+      navigate("/chat/new");
     }
     setDeleteDialogOpen(false);
     setConversationToDelete(null);
-  };
-
-  const handleConversationClick = (id: string) => {
-    onConversationChange(id);
   };
 
   const handleMoreOptionsClick = (
@@ -420,10 +388,8 @@ export function AppSidebar({
                         />
                       ) : (
                         <ConversationMenuItem
-                          activeConversation={activeConversation}
                           openDropdownId={openDropdownId}
                           conversation={conversation}
-                          handleConversationClick={handleConversationClick}
                           handleDeleteClick={handleDeleteClick}
                           handleDropdownOpenChange={handleDropdownOpenChange}
                           handleEdit={handleEdit}
@@ -446,18 +412,13 @@ export function AppSidebar({
             <AlertDialogDescription>
               Are you sure you want to delete this conversation? This action
               cannot be undone.
-              {conversationToDelete && (
-                <div className="mt-2 text-sm text-muted-foreground">
-                  Conversation ID: {conversationToDelete}
-                </div>
-              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90"
             >
               Delete
             </AlertDialogAction>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { Send, LinkIcon } from "lucide-react";
 import { fetchSSE } from "@/lib/fetch-sse";
 import { ChatMessageRequest } from "@/types/chat";
-import { useAuth } from "@/context/AuthProvider";
+import { useAppContext } from "@/context/AppContextProvider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import LinkScrapingIndicator from "@/components/link-scraping-indicator";
@@ -17,7 +17,7 @@ interface ScrapingStatus {
 }
 
 function ChatEmptyState() {
-  const { user } = useAuth();
+  const { user } = useAppContext();
 
   return (
     <div className="flex flex-col items-center justify-center h-full text-slate-400">

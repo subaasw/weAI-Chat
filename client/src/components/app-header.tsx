@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import { ChevronDown, LogOut, User } from "lucide-react";
-import { useAuth } from "@/context/AuthProvider";
+import { useAppContext } from "@/context/AppContextProvider";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -19,7 +19,7 @@ function getInitials(name: string) {
 
 export default function AppHeader() {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout, user } = useAppContext();
 
   const handleLogout = async () => {
     await logout();

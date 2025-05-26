@@ -7,22 +7,27 @@ import {
 } from "react";
 
 import { UserProps } from "@/types/userAuth";
-import { AuthEndpoints } from "@/utils/api-constant";
+import { ConversationTypes } from "@/types/chat";
 import serverCall, { deleteRequest } from "@/lib/serverCall";
+import { AuthEndpoints } from "@/utils/api-constant";
+import ChatService from "@/utils/chat";
 import AuthService from "@/utils/userAuth";
 
-interface AuthContextType {
+interface AppContextType {
   isAuthenticated: boolean;
   user: Record<string, any> | null;
+  initialConversations: ConversationTypes[];
   userLogin: (email: string, password: string) => Promise<Response>;
+  fetchConversations: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AppContext = createContext<AppContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<UserProps | null>(null);
+  const [conversations, setConversations] = useState<ConversationTypes[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -45,6 +50,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
+  const fetchConversations = async () => {
+    try {
+      const conversations = await ChatService.getConversations();
+      setConversations(conversations);
+    } catch (e) {
+      console.error("Error while fetching conversations", e);
+    }
+  };
+
   const logout = async () => {
     await deleteRequest(AuthEndpoints.logout);
     localStorage.removeItem("user");
@@ -56,17 +70,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     userLogin: AuthService.login,
     logout,
     user,
+    initialConversations: conversations,
+    fetchConversations,
   };
 
   if (isLoading) {
     return null;
   }
 
-  return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
+  return <AppContext.Provider value={values}>{children}</AppContext.Provider>;
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
+export const useAppContext = () => {
+  const context = useContext(AppContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }

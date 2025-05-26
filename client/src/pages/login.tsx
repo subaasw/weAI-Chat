@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router";
 
-import { useAuth } from "@/context/AuthProvider";
+import { useAppContext } from "@/context/AppContextProvider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +20,7 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { userLogin } = useAuth();
+  const { userLogin } = useAppContext();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

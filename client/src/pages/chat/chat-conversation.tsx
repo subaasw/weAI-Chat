@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
-import ChatMessage from "@/components/chat-message";
-import LinkScrapingIndicator from "@/components/link-scraping-indicator";
+import { ChatMessageRequest } from "@/types/chat";
 import { fetchSSE } from "@/lib/fetch-sse";
 import ChatService from "@/utils/chat";
-import { ChatMessageRequest } from "@/types/chat";
 import { ChatEndpoints } from "@/utils/api-constant";
+import { useAppContext } from "@/context/AppContextProvider";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import ChatMessage from "@/components/chat-message";
+import LinkScrapingIndicator from "@/components/link-scraping-indicator";
 
 interface ScrapingStatus {
   inProgress: boolean;
@@ -24,6 +25,7 @@ type History = {
 export default function ConversationPage() {
   const params = useParams();
   const conversationId = params.conversationId as string;
+  const { fetchConversations } = useAppContext();
 
   const [messages, setMessages] = useState<ChatMessageRequest[]>([]);
   const [input, setInput] = useState("");
@@ -122,6 +124,10 @@ export default function ConversationPage() {
           inProgress: false,
           urls: prev.urls,
         }));
+
+        if (messages.length == 4) {
+          fetchConversations();
+        }
       }
     );
   };

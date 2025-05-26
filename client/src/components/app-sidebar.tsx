@@ -1,5 +1,5 @@
 "use client";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 
 import {
@@ -20,6 +20,7 @@ import {
 } from "@/types/sidebar";
 import ChatService from "@/utils/chat";
 
+import { useAppContext } from "@/context/AppContextProvider";
 import {
   Sidebar,
   SidebarContent,
@@ -109,6 +110,7 @@ function ConversationMenuItem({
       <SidebarMenuButton
         asChild
         isActive={isActive}
+        title={conversation.title}
         className={`w-full transition-all duration-200 py-1 ${
           openDropdownId === conversation.id ||
           (typeof window !== "undefined" &&
@@ -185,8 +187,10 @@ function ConversationMenuItem({
 export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { initialConversations, fetchConversations } = useAppContext();
   const { toggleSidebar } = useSidebar();
-  const [conversations, setConversations] = useState<ConversationTypes[]>([]);
+  const [conversations, setConversations] =
+    useState<ConversationTypes[]>(initialConversations);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -288,13 +292,14 @@ export function AppSidebar() {
   };
 
   useLayoutEffect(() => {
-    const fetchConversations = async () => {
-      const conversations = await ChatService.getConversations();
-
-      setConversations(conversations);
-    };
     fetchConversations();
   }, []);
+
+  useEffect(() => {
+    if (initialConversations) {
+      setConversations(initialConversations);
+    }
+  }, [initialConversations]);
 
   return (
     <>
@@ -369,9 +374,11 @@ export function AppSidebar() {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {filteredConversations.length === 0 && searchQuery ? (
+                {filteredConversations.length === 0 ? (
                   <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                    No conversations found for "{searchQuery}"
+                    {searchQuery
+                      ? `No conversations found for "${searchQuery}"`
+                      : "No conversations found"}
                   </div>
                 ) : (
                   filteredConversations.map((conversation) => (

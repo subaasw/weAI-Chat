@@ -36,6 +36,7 @@ function ChatEmptyState() {
 
 export default function NewChatPage() {
   const navigate = useNavigate();
+  const { fetchConversations } = useAppContext();
   const [messages, setMessages] = useState<ChatMessageRequest[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -115,13 +116,17 @@ export default function NewChatPage() {
   };
 
   useEffect(() => {
-    if (!conversationId || isLoading) return;
+    const getConversationAndRedirect = () => {
+      const timeoutId = setTimeout(async () => {
+        await fetchConversations();
+        navigate(`/chat/${conversationId}`);
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    };
 
-    const timeoutId = setTimeout(() => {
-      navigate(`/chat/${conversationId}`);
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
+    if (conversationId && !isLoading) {
+      getConversationAndRedirect();
+    }
   }, [conversationId, isLoading]);
 
   return (

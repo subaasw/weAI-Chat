@@ -5,6 +5,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ChatMainLayout from "./pages/chat";
 import NewChatPage from "./pages/chat/new";
 import ConversationPage from "./pages/chat/chat-conversation";
+import AdminLayout from "./pages/admin/layout";
+import AdminDashboard from "./pages/admin";
 
 const ChatLayout = ({ children }: { children: React.ReactNode }) => {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -26,6 +28,17 @@ export default function RoutingPages() {
         <Route index element={<Navigate to="new" replace />} />
         <Route path="new" element={<NewChatPage />} />
         <Route path=":conversationId" element={<ConversationPage />} />
+      </Route>
+
+      <Route
+        path="/admin"
+        element={
+          <AdminLayout />
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        {/* <Route path="new" element={<NewChatPage />} /> */}
+        {/* <Route path=":conversationId" element={<ConversationPage />} /> */}
       </Route>
 
       <Route path="/" element={<Navigate to="/login" replace />} />

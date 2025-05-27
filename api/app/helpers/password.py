@@ -8,6 +8,3 @@ def create_hash_Password(password: str):
 
 def verify_hash_password(password: str, hash_password: str):
     return bcrypt.checkpw(byte_encode(password), byte_encode(hash_password))
-
-
-

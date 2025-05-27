@@ -31,6 +31,10 @@ class TimeStampMixin(SQLModel):
         sa_column_kwargs={"nullable": False, "onupdate": datetime.now}
     )
 
+class UserType(str, Enum):
+    admin = 'admin'
+    user = 'user'
+
 class Users(TimeStampMixin, table=True):
     __tablename__ = "users"
 
@@ -40,6 +44,7 @@ class Users(TimeStampMixin, table=True):
     email: EmailStr = Field(unique=True, index=True, nullable=False)
     name: str = Field(sa_column=Column("full_name", String(200), nullable=False))
     password: str = Field(sa_column=Column("password_hash", String(255), nullable=False))
+    # type: UserType = Field(nullable=False, default=UserType.user)
 
     conversations: List["Conversations"] = Relationship(back_populates="owner")
 

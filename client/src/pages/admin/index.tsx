@@ -1,4 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { ReactNode, useState } from "react";
+import { Link } from "react-router";
 import {
   Upload,
   Globe,
@@ -10,8 +11,7 @@ import {
   Database,
   Activity,
 } from "lucide-react";
-import { ReactNode, useState } from "react";
-import { Link } from "react-router";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface DashbordWidgetCardProps {
   title: string;
@@ -170,7 +170,9 @@ export default function AdminDashboard() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900">Quick Actions</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Quick Actions
+            </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {quickActions.map((action, index) => (
                 <Link key={index} to={action.href} className="group">

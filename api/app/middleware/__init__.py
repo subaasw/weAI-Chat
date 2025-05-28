@@ -28,3 +28,27 @@ async def autheticate(
 
     request.state.user = user
     return user
+
+
+def require_admin(
+        request: Request,
+        session: Session = Depends(get_session)
+    ) -> Users:
+    token = cookie_manager.read_cookie(request)
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    
+    uid = verify_token(token)
+    if not uid:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    stmt = select(Users).where(Users.id == uuid.UUID(uid))
+    user = session.exec(stmt).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    
+    if user.type == "admin":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    request.state.user = user
+    return user

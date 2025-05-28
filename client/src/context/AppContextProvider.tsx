@@ -15,7 +15,7 @@ import AuthService from "@/utils/userAuth";
 
 interface AppContextType {
   isAuthenticated: boolean;
-  user: Record<string, any> | null;
+  user: UserProps | null;
   initialConversations: ConversationTypes[];
   userLogin: (email: string, password: string) => Promise<Response>;
   fetchConversations: () => Promise<void>;

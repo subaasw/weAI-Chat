@@ -44,7 +44,7 @@ class Users(TimeStampMixin, table=True):
     email: EmailStr = Field(unique=True, index=True, nullable=False)
     name: str = Field(sa_column=Column("full_name", String(200), nullable=False))
     password: str = Field(sa_column=Column("password_hash", String(255), nullable=False))
-    # type: UserType = Field(nullable=False, default=UserType.user)
+    type: UserType = Field(nullable=False, default=UserType.user)
 
     conversations: List["Conversations"] = Relationship(back_populates="owner")
 

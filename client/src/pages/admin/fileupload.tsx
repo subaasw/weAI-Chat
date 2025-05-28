@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, FileText, File, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FileUploadService } from "@/lib/file-upload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -103,49 +104,80 @@ export default function FileTrainingPage() {
       type: file.type,
       status: "uploading" as const,
       progress: 0,
+      chunksUploaded: 0,
+      totalChunks: Math.ceil(file.size / (1024 * 1024)), // 1MB chunks
     }));
 
     setFiles((prev) => [...newFiles, ...prev]);
-
-    newFiles.forEach((fileInfo) => {
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 20;
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(interval);
-          setFiles((prev) =>
-            prev.map((f) =>
-              f.id === fileInfo.id
-                ? { ...f, status: "processing", progress: 100 }
-                : f
-            )
-          );
-          setTimeout(() => {
-            setFiles((prev) =>
-              prev.map((f) =>
-                f.id === fileInfo.id
-                  ? {
-                      ...f,
-                      status: "completed",
-                      uploadedAt: new Date().toISOString(),
-                    }
-                  : f
-              )
-            );
-          }, 2000);
-        } else {
-          setFiles((prev) =>
-            prev.map((f) =>
-              f.id === fileInfo.id
-                ? { ...f, progress: Math.round(progress) }
-                : f
-            )
-          );
-        }
-      }, 1000);
+    newFiles.forEach((fileInfo, index) => {
+      const file = acceptedFiles[index];
+      if (file) {
+        uploadFileWithChunks(file, fileInfo.id);
+      }
     });
   }, []);
+
+  const uploadFileWithChunks = async (file: File, fileId: string) => {
+    const startTime = Date.now();
+
+    const handleProgress = (progressData: any) => {
+      const currentTime = Date.now();
+      const elapsedTime = (currentTime - startTime) / 1000; // seconds
+      const uploadSpeed =
+        progressData.chunksUploaded > 0
+          ? (progressData.chunksUploaded * 1024 * 1024) / elapsedTime // bytes per second
+          : 0;
+
+      const remainingChunks =
+        progressData.totalChunks - progressData.chunksUploaded;
+      const estimatedTimeRemaining =
+        uploadSpeed > 0 ? (remainingChunks * 1024 * 1024) / uploadSpeed : 0;
+
+      setFiles((prev) =>
+        prev.map((f) => {
+          if (f.id === fileId) {
+            return {
+              ...f,
+              status: progressData.status,
+              progress: progressData.progress,
+              chunksUploaded: progressData.chunksUploaded,
+              totalChunks: progressData.totalChunks,
+              error: progressData.error,
+              uploadSpeed,
+              estimatedTimeRemaining,
+              ...(progressData.status === "completed" && {
+                uploadedAt: new Date().toISOString(),
+              }),
+            };
+          }
+          return f;
+        })
+      );
+    };
+
+    try {
+      await FileUploadService.uploadFileWithChunks(
+        file,
+        fileId,
+        handleProgress
+      );
+    } catch (error) {
+      console.error("Upload failed:", error);
+      setFiles((prev) =>
+        prev.map((f) => {
+          if (f.id === fileId) {
+            return {
+              ...f,
+              status: "failed",
+              error: error instanceof Error ? error.message : "Upload failed",
+            };
+          }
+
+          return f;
+        })
+      );
+    }
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -283,7 +315,7 @@ export default function FileTrainingPage() {
                                 </div>
                               )}
                               {file.error && (
-                                <p className="text-sm text-red-600 mt-1 truncate">
+                                <p className="text-xs text-red-600 mt-1 truncate">
                                   {file.error}
                                 </p>
                               )}

@@ -1,12 +1,15 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter,Depends
 
 from middleware import autheticate, require_admin
 from .auth import auth_router
 from .users import user_router
 from .chat import chat_router
 from .admin import admin_router
+from .uploads import upload_router
 
 routes = APIRouter(prefix="/v1", tags=["v1"])
+
+routes.include_router(upload_router)
 
 routes.include_router(auth_router)
 routes.include_router(user_router, dependencies=[Depends(autheticate)])

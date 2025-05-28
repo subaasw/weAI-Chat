@@ -77,3 +77,27 @@ class ChatMessages(TimeStampMixin, table=True):
 
     conversation: Optional[Conversations] = Relationship(back_populates="messages")
 
+class TrainingStatus(str, Enum):
+    pending = 'pending'
+    processing = 'processing'
+    failed = 'failed'
+    completed = 'completed'
+class TrainingDocs(TimeStampMixin, table=True):
+    __tablename__ = "training_docs"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
+    file_name: str = Field(nullable=False)
+    size: int = Field(nullable=False)
+    mime_type: str = Field(nullable=False)
+    character_count: int = Field(nullable=False, default=0)
+    status: TrainingStatus = Field(nullable=False, default=TrainingStatus.pending)
+
+class TrainingWebsite(TimeStampMixin, table=True):
+    __tablename__ = "training_urls"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
+    url: str = Field(nullable=False)
+    parent_id: uuid.UUID = Field(nullable=True)
+    character_count: int = Field(nullable=False, default=0)
+    status: TrainingStatus = Field(nullable=False, default=TrainingStatus.pending)
+

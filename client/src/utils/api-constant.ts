@@ -17,4 +17,8 @@ const ChatEndpoints = {
   },
 };
 
-export { BASE_URL, AuthEndpoints, ChatEndpoints };
+const FileUploadEndpoint = {
+  chunk: getFullURL("/upload/files"),
+};
+
+export { BASE_URL, AuthEndpoints, ChatEndpoints, FileUploadEndpoint };

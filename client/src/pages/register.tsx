@@ -34,20 +34,18 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await AuthService.register(
+      const user = await AuthService.register(
         email,
         fullName,
         password,
         confirmPassword
       );
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Registration failed");
-      }
 
-      setTimeout(() => {
-        navigate("/chat");
-      }, 1000);
+      if (user.id) {
+        setTimeout(() => {
+          navigate("/chat");
+        }, 1000);
+      }
     } catch (err: any) {
       setError(err.error);
     } finally {

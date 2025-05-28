@@ -1,28 +1,28 @@
-import serverCall, { deleteRequest } from "@/lib/serverCall";
+import serverCall from "@/lib/serverCall";
 import { ChatMessageResponse, ConversationTypes } from "@/types/chat";
 import { ChatEndpoints } from "./api-constant";
 
 export default class ChatService {
   static async getConversations(): Promise<ConversationTypes[]> {
-    const res = await serverCall(ChatEndpoints.conversation.all);
+    const conversations: ConversationTypes[] = await serverCall.get(
+      ChatEndpoints.conversation.all
+    );
 
-    const conversations: ConversationTypes[] = await res.json();
     return conversations;
   }
 
   static async getMessages(
     conversationId: string
   ): Promise<ChatMessageResponse[]> {
-    const res = await serverCall(
+    const messages: ChatMessageResponse[] = await serverCall.get(
       ChatEndpoints.conversation.single(conversationId)
     );
 
-    const messages: ChatMessageResponse[] = await res.json();
     return messages;
   }
 
-  static async removeConversation(conversationId: string): Promise<Response> {
-    const res = await deleteRequest(
+  static async removeConversation(conversationId: string): Promise<any> {
+    const res = await serverCall.delete(
       ChatEndpoints.conversation.single(conversationId)
     );
 
@@ -32,13 +32,10 @@ export default class ChatService {
   static async renameConversation(
     conversationId: string,
     title: string
-  ): Promise<Response> {
-    const res = await serverCall(
+  ): Promise<ConversationTypes> {
+    const res: ConversationTypes = await serverCall.patch(
       ChatEndpoints.conversation.single(conversationId),
-      {
-        method: "PATCH",
-        body: JSON.stringify({ title }),
-      }
+      { title }
     );
 
     return res;

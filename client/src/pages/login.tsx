@@ -28,8 +28,8 @@ function LoginForm() {
     setError("");
 
     try {
-      const { ok } = await userLogin(email, password);
-      if (ok) {
+      const { id } = await userLogin(email, password);
+      if (id) {
         setTimeout(() => {
           navigate("/chat");
         }, 1000);

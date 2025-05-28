@@ -1,20 +1,20 @@
-import serverCall, { postRequest } from "@/lib/serverCall";
+import serverCall from "@/lib/serverCall";
 import { AuthEndpoints } from "./api-constant";
 import { UserProps } from "@/types/userAuth";
 
 export default class AuthService {
-  static async login(email: string, password: string): Promise<Response> {
-    const res = await postRequest(AuthEndpoints.login, { email, password });
-    if (!res.ok) return res;
-
-    const data: UserProps = await res.json();
+  static async login(email: string, password: string): Promise<UserProps> {
+    const data: UserProps = await serverCall.post(AuthEndpoints.login, {
+      email,
+      password,
+    });
 
     setTimeout(() => {
       if (data.id && data.email) {
         localStorage.setItem("user", JSON.stringify(data));
       }
-    }, 500);
-    return res;
+    }, 1500);
+    return data;
   }
 
   static async register(
@@ -22,32 +22,25 @@ export default class AuthService {
     fullName: string,
     password: string,
     confirmPassword: string
-  ): Promise<Response> {
-    const res = await postRequest(AuthEndpoints.register, {
+  ): Promise<UserProps> {
+    const user: UserProps = await serverCall.post(AuthEndpoints.register, {
       fullName,
       email,
       password,
       confirmPassword,
     });
-    if (!res.ok) return res;
-
-    const data: UserProps = await res.json();
 
     setTimeout(() => {
-      if (data.id && data.email) {
-        localStorage.setItem("user", JSON.stringify(data));
+      if (user.id && user.email) {
+        localStorage.setItem("user", JSON.stringify(user));
       }
-    }, 500);
+    }, 1500);
 
-    return res;
+    return user;
   }
 
   static async fetchCurrent(): Promise<UserProps> {
-    const res = await serverCall(AuthEndpoints.me);
-    if (!res.ok) {
-      throw new Error("Failed to fetch current user");
-    }
-    const data: UserProps = await res.json();
-    return data;
+    const user: UserProps = await serverCall.get(AuthEndpoints.me);
+    return user;
   }
 }

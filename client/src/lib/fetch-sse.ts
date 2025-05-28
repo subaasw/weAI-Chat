@@ -1,4 +1,4 @@
-import { postRequest } from "./serverCall";
+import { BASE_URL } from "@/utils/api-constant";
 
 export async function fetchSSE(
   url: string,
@@ -14,7 +14,13 @@ export async function fetchSSE(
   ) => void,
   onStreamDone: () => void
 ) {
-  const response = await postRequest(url, data);
+  const response = await fetch(BASE_URL + url, {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok || !response.body) {
     throw new Error(`HTTP error! Status: ${response.status}`);

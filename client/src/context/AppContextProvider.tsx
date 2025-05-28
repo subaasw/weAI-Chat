@@ -8,7 +8,7 @@ import {
 
 import { UserProps } from "@/types/userAuth";
 import { ConversationTypes } from "@/types/chat";
-import serverCall, { deleteRequest } from "@/lib/serverCall";
+import serverCall from "@/lib/serverCall";
 import { AuthEndpoints } from "@/utils/api-constant";
 import ChatService from "@/utils/chat";
 import AuthService from "@/utils/userAuth";
@@ -17,7 +17,7 @@ interface AppContextType {
   isAuthenticated: boolean;
   user: UserProps | null;
   initialConversations: ConversationTypes[];
-  userLogin: (email: string, password: string) => Promise<Response>;
+  userLogin: (email: string, password: string) => Promise<UserProps>;
   fetchConversations: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -33,8 +33,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await serverCall(AuthEndpoints.me);
-        const userData = await response.json();
+        const userData: UserProps = await serverCall.get(AuthEndpoints.me);
         if (userData) {
           localStorage.setItem("user", JSON.stringify(userData));
           setUser(userData);
@@ -60,7 +59,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    await deleteRequest(AuthEndpoints.logout);
+    await serverCall.delete(AuthEndpoints.logout);
     localStorage.removeItem("user");
     setIsAuthenticated(false);
   };

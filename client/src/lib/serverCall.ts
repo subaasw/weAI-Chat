@@ -18,8 +18,6 @@ class ServerCall {
     params?: Record<string, string | number>
   ): string {
     const url = new URL(endpoint, this.baseURL);
-    console.log("hello", url, this.baseURL);
-    
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {

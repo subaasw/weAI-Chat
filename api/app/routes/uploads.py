@@ -4,15 +4,10 @@ from pathlib import Path
 from fastapi import APIRouter, File, Form, status, UploadFile
 from fastapi.responses import JSONResponse
 
-from services.markdown_converter import convert_to_markdown
+from core.config import CHUNKS_DIR, UPLOAD_DIR, PROCESSED_DIR
 
-CHUNKS_DIR = "uploads/chunk_uploads"
 Path(CHUNKS_DIR).mkdir(exist_ok=True)
-
-UPLOAD_DIR = "uploads/docs"
 Path(UPLOAD_DIR).mkdir(exist_ok=True)
-
-PROCESSED_DIR = "uploads/processed_files"
 Path(PROCESSED_DIR).mkdir(exist_ok=True)
 
 upload_router = APIRouter()
@@ -27,7 +22,7 @@ def rename_file(path_str: str) -> str:
     new_path = path.parent / new_name
 
     path.rename(new_path)
-    return str(new_path)
+    return new_name
 
 @upload_router.post("/upload/files")
 async def upload_chunk_files(
@@ -67,7 +62,7 @@ async def upload_chunk_files(
                 "success": True, 
                 "isComplete": True, 
                 "size": os.path.getsize(upload_path), 
-                "file_name": rename_file(upload_path), 
+                "filename": rename_file(upload_path), 
                 "mime_type": mime_type,
                 "message": "File Uploaded"
             }, 

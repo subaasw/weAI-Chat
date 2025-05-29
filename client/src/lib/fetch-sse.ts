@@ -1,5 +1,3 @@
-import { BASE_URL } from "@/utils/api-constant";
-
 export async function fetchSSE(
   url: string,
   data: any,
@@ -14,11 +12,13 @@ export async function fetchSSE(
   ) => void,
   onStreamDone: () => void
 ) {
-  const response = await fetch(BASE_URL + url, {
+  const response = await fetch(url, {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
+    credentials: "include",
     body: JSON.stringify(data),
   });
 

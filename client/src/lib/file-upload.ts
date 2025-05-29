@@ -1,4 +1,5 @@
-import { FileUploadEndpoint } from "@/utils/api-constant";
+import { FileMetadata } from "@/types/training";
+import { AdminEndpoints, FileUploadEndpoint } from "@/utils/api-constant";
 import serverCall from "./serverCall";
 
 interface UploadProgress {
@@ -8,18 +9,31 @@ interface UploadProgress {
   totalChunks: number;
   status: "uploading" | "processing" | "completed" | "failed";
   error?: string;
+  fileSize?: number;
+  fileName?: string;
+  mimeType?: string;
 }
 
 interface ChunkUploadResult {
   success: boolean;
   isComplete?: boolean;
   error?: string;
+  filename?: string;
+  size?: number;
+  mime_type?: string;
+}
+
+interface FileCompleteResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+  doc?: FileMetadata;
 }
 
 export class FileUploadService {
   private static readonly CHUNK_SIZE = 1024 * 1024; // 1MB chunks
   private static readonly MAX_RETRIES = 0;
-  private static readonly RETRY_DELAY = 1000; // 1 second
+  private static readonly RETRY_DELAY = 1000;
 
   static async uploadFileWithChunks(
     file: File,
@@ -75,10 +89,38 @@ export class FileUploadService {
             chunksUploaded: totalChunks,
             totalChunks,
             status: "processing",
+            ...result,
           });
 
-          await this.simulateProcessing(fileId, onProgress, totalChunks);
-          return true;
+          // Call completion API
+          const completeResult = await this.completeFileUpload(
+            result.filename || file.name,
+            result.size || file.size,
+            result.mime_type || file.type
+          );
+
+          if (completeResult.success) {
+            onProgress({
+              fileId,
+              progress: 100,
+              chunksUploaded: totalChunks,
+              totalChunks,
+              status: "completed",
+              ...result,
+            });
+            return true;
+          } else {
+            onProgress({
+              fileId,
+              progress: 100,
+              chunksUploaded: totalChunks,
+              totalChunks,
+              status: "failed",
+              error:
+                completeResult.error || "Failed to complete file processing",
+            });
+            return false;
+          }
         }
       }
 
@@ -157,25 +199,37 @@ export class FileUploadService {
     return {
       success: true,
       isComplete: result.isComplete || false,
+      filename: result.filename,
+      size: result.size,
+      mime_type: result.mime_type,
     };
   }
 
-  private static async simulateProcessing(
-    fileId: string,
-    onProgress: (progress: UploadProgress) => void,
-    totalChunks: number
-  ): Promise<void> {
-    const processingTime = 2000 + Math.random() * 2000;
+  private static async completeFileUpload(
+    fileName: string,
+    fileSize: number,
+    mimeType: string
+  ): Promise<FileCompleteResult> {
+    try {
+      const result: FileMetadata = await serverCall.post(
+        AdminEndpoints.train.doc,
+        {
+          filename: fileName,
+          size: fileSize,
+          mime_type: mimeType,
+        }
+      );
 
-    await new Promise((resolve) => setTimeout(resolve, processingTime));
-
-    onProgress({
-      fileId,
-      progress: 100,
-      chunksUploaded: totalChunks,
-      totalChunks,
-      status: "completed",
-    });
+      return {
+        success: true,
+        doc: result,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Completion failed",
+      };
+    }
   }
 
   static formatFileSize(bytes: number): string {
@@ -186,14 +240,5 @@ export class FileUploadService {
     return (
       Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
     );
-  }
-
-  static getFileTypeIcon(type: string): string {
-    if (type.includes("pdf")) return "📄";
-    if (type.includes("word") || type.includes("document")) return "📝";
-    if (type.includes("text")) return "📃";
-    if (type.includes("csv")) return "📊";
-    if (type.includes("markdown")) return "📋";
-    return "📄";
   }
 }

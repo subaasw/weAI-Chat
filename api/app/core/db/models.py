@@ -82,6 +82,7 @@ class TrainingStatus(str, Enum):
     processing = 'processing'
     failed = 'failed'
     completed = 'completed'
+
 class TrainingDocs(TimeStampMixin, table=True):
     __tablename__ = "training_docs"
 

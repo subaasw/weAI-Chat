@@ -5,12 +5,14 @@ import asyncio
 from google import genai
 from google.genai import types
 
+from services.rag.retriever import ChromaDBManager
 from core.config import GEMINI_API_KEY
 from .crawler import extractor, crawl_and_stream_urls
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 GEMINI_MODEL = 'gemini-2.0-flash-001'
+chromadb = ChromaDBManager()
 
 class HistoryItem(TypedDict):
     role: Literal['user', 'assistant']
@@ -86,19 +88,37 @@ def chat_with_gemini_stream(message: str, history: Optional[List[HistoryItem]] =
                 )
             )
 
+    context = chromadb.query(query_texts=[message])
+    prompt = (
+        """
+        You are a helpful and informative bot that answers questions using
+        text from the reference passage included below.
+        Be sure to respond in a complete sentence, being comprehensive,
+        including all relevant background information.
+        However, you are talking to a non-technical audience, so be sure to
+        break down complicated concepts and strike a friendly
+        and converstional tone. If the passage is irrelevant to the answer,
+        you may ignore it.
+        QUESTION: '{query}'
+        PASSAGE: '{relevant_passage}'
+
+        ANSWER:
+        """
+    ).format(query=message, relevant_passage=context)
+
     contents.append(
         types.Content(
             role='user',
-            parts=[types.Part.from_text(text=scrapped_data if urls else message)]
+            parts=[types.Part.from_text(text=scrapped_data if urls else prompt)]
         )
     )
-
+    
     for chunk in client.models.generate_content_stream(
         model=GEMINI_MODEL,
         config=types.GenerateContentConfig(
             system_instruction= "You are a helpful assistant",
-            temperature=0.7,
-            max_output_tokens=500,
+            temperature=1,
+            # max_output_tokens=500,
         ),
         contents = contents
     ):

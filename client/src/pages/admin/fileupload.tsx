@@ -98,7 +98,7 @@ export default function FileTrainingPage() {
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map((file) => ({
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).substring(2, 9),
       name: file.name,
       size: file.size,
       type: file.type,
@@ -120,7 +120,7 @@ export default function FileTrainingPage() {
   const uploadFileWithChunks = async (file: File, fileId: string) => {
     const startTime = Date.now();
 
-    const handleProgress = (progressData: any) => {
+    const handleProgress = async (progressData: any) => {
       const currentTime = Date.now();
       const elapsedTime = (currentTime - startTime) / 1000; // seconds
       const uploadSpeed =

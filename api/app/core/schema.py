@@ -49,3 +49,8 @@ class ConversationModel(BaseModel):
 
 class ConversationDetailModel(ConversationModel):
     messages: List[CreateChatMessageModel] = []
+
+class TrainingDocsModel(BaseModel):
+    filename: str
+    size: int
+    mime_type: str

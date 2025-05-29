@@ -31,5 +31,8 @@ archive.zip
 # macOS
 .DS_Store
 
-#Uploads
+# Uploads
 uploads
+
+# Vector DB
+vector_db

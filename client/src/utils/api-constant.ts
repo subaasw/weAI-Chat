@@ -17,8 +17,20 @@ const ChatEndpoints = {
   },
 };
 
+const AdminEndpoints = {
+  train: {
+    doc: getFullURL("/admin/train/docs"),
+  },
+};
+
 const FileUploadEndpoint = {
   chunk: getFullURL("/upload/files"),
 };
 
-export { BASE_URL, AuthEndpoints, ChatEndpoints, FileUploadEndpoint };
+export {
+  BASE_URL,
+  AdminEndpoints,
+  AuthEndpoints,
+  ChatEndpoints,
+  FileUploadEndpoint,
+};

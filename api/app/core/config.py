@@ -18,3 +18,11 @@ HOST=get_env("HOST")
 
 # DB URL
 DB_CONFIG = f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{HOST}:3306/{DB_NAME}"
+
+# Uploads path
+CHUNKS_DIR = "uploads/chunk_uploads"
+UPLOAD_DIR = "uploads/docs"
+PROCESSED_DIR = "uploads/processed_files"
+
+# VECTOR DB PATH
+VECTOR_DB_DIR = "vector_db"

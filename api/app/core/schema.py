@@ -54,3 +54,6 @@ class TrainingDocsModel(BaseModel):
     filename: str
     size: int
     mime_type: str
+
+class TrainingWebsiteModel(BaseModel):
+    url: str

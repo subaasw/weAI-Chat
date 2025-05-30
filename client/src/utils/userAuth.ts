@@ -9,11 +9,10 @@ export default class AuthService {
       password,
     });
 
-    setTimeout(() => {
-      if (data.id && data.email) {
-        localStorage.setItem("user", JSON.stringify(data));
-      }
-    }, 1500);
+    if (data.id && data.email) {
+      localStorage.setItem("user", JSON.stringify(data));
+    }
+
     return data;
   }
 
@@ -30,11 +29,9 @@ export default class AuthService {
       confirmPassword,
     });
 
-    setTimeout(() => {
-      if (user.id && user.email) {
-        localStorage.setItem("user", JSON.stringify(user));
-      }
-    }, 1500);
+    if (user.id && user.email) {
+      localStorage.setItem("user", JSON.stringify(user));
+    }
 
     return user;
   }

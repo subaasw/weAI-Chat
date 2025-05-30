@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import AuthService from "@/utils/userAuth";
+
+import { useAppContext } from "@/context/AppContextProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,6 +16,7 @@ import { Label } from "@/components/ui/label";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { userRegister } = useAppContext();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +36,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const user = await AuthService.register(
+      const user = await userRegister(
         email,
         fullName,
         password,
@@ -44,7 +46,7 @@ export default function RegisterPage() {
       if (user.id) {
         setTimeout(() => {
           navigate("/chat");
-        }, 1000);
+        }, 500);
       }
     } catch (err: any) {
       setError(err.error);

@@ -3,6 +3,8 @@ import {
   TrainDocsPayload,
   WebsiteMetadata,
 } from "@/types/training";
+import { ConversationStats, UserChatStats } from "@/types/admin";
+
 import serverCall from "@/lib/serverCall";
 import { AdminEndpoints } from "./api-constant";
 
@@ -48,5 +50,19 @@ export default class AdminService {
       AdminEndpoints.train.website.single(websiteId)
     );
     return res;
+  }
+
+  static async getUsers(): Promise<UserChatStats[]> {
+    const users: UserChatStats[] = await serverCall.get(
+      AdminEndpoints.users.base
+    );
+    return users;
+  }
+
+  static async fetchAllConversations(): Promise<ConversationStats[]> {
+    const conversations: ConversationStats[] = await serverCall.get(
+      AdminEndpoints.conversations.base
+    );
+    return conversations;
   }
 }

@@ -3,10 +3,10 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session, delete, select
+from sqlmodel import Session, delete, select, func
 
 from core.db import get_session
-from core.db.models import TrainingDocs, TrainingWebsite, Users, Conversations, ChatMessages, TrainingStatus
+from core.db.models import (TrainingDocs, TrainingWebsite, Users, Conversations, ChatMessages, TrainingStatus, UserType)
 from core.schema import TrainingDocsModel, TrainingWebsiteModel
 from core.config import UPLOAD_DIR, PROCESSED_DIR
 from services.markdown_converter import convert_to_markdown
@@ -130,13 +130,63 @@ async def remove_website(websiteId: str, session: SessionDep):
 async def get_users(session: SessionDep):
     users = session.exec(select(Users)).fetchall()
 
-    return users
+    result = []
+    for user in users:
+        if user.type == UserType.admin:
+            continue
+
+        conv_count_stmt = (
+            select(func.count())
+            .select_from(Conversations)
+            .where(Conversations.user_id == user.id)
+        )
+        conv_count = session.exec(conv_count_stmt).one()
+
+        msg_count_stmt = (
+            select(func.count())
+            .select_from(ChatMessages)
+            .join(Conversations)
+            .where(Conversations.user_id == user.id)
+        )
+        msg_count = session.exec(msg_count_stmt).one()
+
+        result.append({
+            "userId": user.id,
+            "name": user.name,
+            "email": user.email,
+            "totalConversations": conv_count,
+            "totalMessages": msg_count,
+            "createdAt": user.created_at
+        })
+
+    return result
 
 @admin_router.get("/conversations")
 async def get_conversations(session: SessionDep):
-    conversations = session.exec(select(Conversations)).fetchall()
+    conversations = session.exec(
+        select(Conversations, Users)
+        .join(Users, Users.id == Conversations.user_id)
+    ).fetchall()
 
-    return conversations
+    results = []
+    for conversation, user in conversations:
+        message_count_stmt = (
+            select(func.count())
+            .select_from(ChatMessages)
+            .where(ChatMessages.conversation_id == conversation.id)
+        )
+        total_messages = session.exec(message_count_stmt).one()
+
+        results.append({
+            "conversationId": conversation.id,
+            "title": conversation.title,
+            "createdAt": conversation.created_at,
+            "userId": user.id,
+            "userName": user.name,
+            "totalMessages": total_messages,
+        })
+
+    return results
 
 @admin_router.get("/conversations/{conversationId}")
 async def get_conversation_messages(conversationId: str, session: SessionDep):

@@ -23,10 +23,17 @@ const AdminEndpoints = {
       base: getFullURL("/admin/train/docs"),
       single: (docId: string) => getFullURL(`/admin/train/docs/${docId}`),
     },
-    website:{
+    website: {
       base: getFullURL("/admin/train/websites"),
-      single: (websiteId: string) => getFullURL(`/admin/train/websites/${websiteId}`),
-    }
+      single: (websiteId: string) =>
+        getFullURL(`/admin/train/websites/${websiteId}`),
+    },
+  },
+  users: {
+    base: getFullURL("/admin/users"),
+  },
+  conversations: {
+    base: getFullURL("/admin/conversations"),
   },
 };
 

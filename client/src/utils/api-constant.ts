@@ -19,7 +19,14 @@ const ChatEndpoints = {
 
 const AdminEndpoints = {
   train: {
-    doc: getFullURL("/admin/train/docs"),
+    doc: {
+      base: getFullURL("/admin/train/docs"),
+      single: (docId: string) => getFullURL(`/admin/train/docs/${docId}`),
+    },
+    website:{
+      base: getFullURL("/admin/train/websites"),
+      single: (websiteId: string) => getFullURL(`/admin/train/websites/${websiteId}`),
+    }
   },
 };
 

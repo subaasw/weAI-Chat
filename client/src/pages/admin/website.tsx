@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Globe, Search, ExternalLink, Trash2, Eye } from "lucide-react";
+import { useLayoutEffect, useState } from "react";
+import { Globe, Search, Trash2 } from "lucide-react";
+import { TrainingStatus } from "@/types/training";
+import AdminService from "@/utils/admin";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,54 +21,43 @@ import {
 interface ScrapingJob {
   id: string;
   url: string;
-  status: "pending" | "running" | "completed" | "failed";
-  pagesFound: number;
-  pagesProcessed: number;
+  status: TrainingStatus;
   startedAt: string;
   completedAt?: string;
   error?: string;
 }
 
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "completed":
+      return (
+        <Badge className="bg-green-100 text-green-700 border-green-200">
+          Completed
+        </Badge>
+      );
+    case "processing":
+      return (
+        <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+          Processing
+        </Badge>
+      );
+    case "failed":
+      return (
+        <Badge className="bg-red-100 text-red-700 border-red-200">Failed</Badge>
+      );
+    default:
+      return (
+        <Badge className="bg-gray-100 text-gray-700 border-gray-200">
+          Pending
+        </Badge>
+      );
+  }
+};
+
 export default function WebsiteTrainingPage() {
   const [url, setUrl] = useState("");
   const [isValidUrl, setIsValidUrl] = useState(true);
-  const [jobs, setJobs] = useState<ScrapingJob[]>([
-    {
-      id: "1",
-      url: "https://docs.example.com",
-      status: "completed",
-      pagesFound: 47,
-      pagesProcessed: 47,
-      startedAt: "2024-01-15T10:30:00Z",
-      completedAt: "2024-01-15T10:45:00Z",
-    },
-    {
-      id: "2",
-      url: "https://support.company.com",
-      status: "running",
-      pagesFound: 45,
-      pagesProcessed: 29,
-      startedAt: "2024-01-15T14:20:00Z",
-    },
-    {
-      id: "3",
-      url: "https://blog.example.com",
-      status: "failed",
-      pagesFound: 0,
-      pagesProcessed: 0,
-      startedAt: "2024-01-15T12:00:00Z",
-      error: "Access denied - robots.txt blocked",
-    },
-    {
-      id: "4",
-      url: "https://help.example.com",
-      status: "completed",
-      pagesFound: 23,
-      pagesProcessed: 23,
-      startedAt: "2024-01-14T09:15:00Z",
-      completedAt: "2024-01-14T09:28:00Z",
-    },
-  ]);
+  const [jobs, setJobs] = useState<ScrapingJob[]>([]);
 
   const validateUrl = (inputUrl: string) => {
     try {
@@ -92,50 +83,38 @@ export default function WebsiteTrainingPage() {
     if (!url || !validateUrl(url)) return;
 
     const newJob: ScrapingJob = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).substring(2, 9),
       url,
       status: "pending",
-      pagesFound: 0,
-      pagesProcessed: 0,
+
       startedAt: new Date().toISOString(),
     };
 
     setJobs([newJob, ...jobs]);
+    await AdminService.addWebsite(url);
     setUrl("");
   };
 
-  const removeJob = (jobId: string) => {
+  const removeJob = async (jobId: string) => {
+    await AdminService.removeWebsite(jobId);
     setJobs(jobs.filter((job) => job.id !== jobId));
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return (
-          <Badge className="bg-green-100 text-green-700 border-green-200">
-            Completed
-          </Badge>
-        );
-      case "running":
-        return (
-          <Badge className="bg-blue-100 text-blue-700 border-blue-200">
-            Running
-          </Badge>
-        );
-      case "failed":
-        return (
-          <Badge className="bg-red-100 text-red-700 border-red-200">
-            Failed
-          </Badge>
-        );
-      default:
-        return (
-          <Badge className="bg-gray-100 text-gray-700 border-gray-200">
-            Pending
-          </Badge>
-        );
-    }
-  };
+  useLayoutEffect(() => {
+    const getWebsites = async () => {
+      const websites = await AdminService.fetchWebsites();
+      setJobs(() =>
+        websites.map((website) => ({
+          id: website.id,
+          status: website.status,
+          url: website.url,
+          startedAt: website.created_at,
+        }))
+      );
+    };
+
+    getWebsites();
+  }, []);
 
   return (
     <div className="flex-1 overflow-y-auto bg-white">

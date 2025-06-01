@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useLayoutEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, FileText, File, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,12 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import AdminService from "@/utils/admin";
 
 interface FileUpload {
   id: string;
   name: string;
   size: number;
-  status: "uploading" | "processing" | "completed" | "failed";
+  status: "pending" | "processing" | "completed" | "failed";
   progress: number;
   error?: string;
   uploadedAt?: string;
@@ -49,10 +50,10 @@ const getStatusBadge = (status: string) => {
           Processing
         </Badge>
       );
-    case "uploading":
+    case "pending":
       return (
         <Badge className="bg-amber-100 text-amber-700 border-amber-200">
-          Uploading
+          Pending
         </Badge>
       );
     case "failed":
@@ -69,32 +70,7 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function FileTrainingPage() {
-  const [files, setFiles] = useState<FileUpload[]>([
-    {
-      id: "existing_1",
-      name: "product-manual.pdf",
-      size: 2048576,
-      status: "completed",
-      progress: 100,
-      uploadedAt: "2024-01-15T10:30:00Z",
-    },
-    {
-      id: "existing_2",
-      name: "faq-document.docx",
-      size: 1024000,
-      status: "completed",
-      progress: 100,
-      uploadedAt: "2024-01-14T15:20:00Z",
-    },
-    {
-      id: "existing_3",
-      name: "user-guide.txt",
-      size: 512000,
-      status: "completed",
-      progress: 100,
-      uploadedAt: "2024-01-13T09:45:00Z",
-    },
-  ]);
+  const [files, setFiles] = useState<FileUpload[]>([]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map((file) => ({
@@ -102,7 +78,7 @@ export default function FileTrainingPage() {
       name: file.name,
       size: file.size,
       type: file.type,
-      status: "uploading" as const,
+      status: "pending" as const,
       progress: 0,
       chunksUploaded: 0,
       totalChunks: Math.ceil(file.size / (1024 * 1024)), // 1MB chunks
@@ -193,9 +169,28 @@ export default function FileTrainingPage() {
     maxSize: 100 * 1024 * 1024,
   });
 
-  const removeFile = (fileId: string) => {
+  const removeFile = async (fileId: string) => {
+    await AdminService.removeFile(fileId);
     setFiles((prev) => prev.filter((f) => f.id !== fileId));
   };
+
+  useLayoutEffect(() => {
+    const fetchAllDocs = async () => {
+      const docs = await AdminService.fetchDocs();
+      setFiles(() =>
+        docs.map((doc) => ({
+          id: doc.id,
+          name: doc.file_name,
+          size: doc.size,
+          status: doc.status,
+          progress: 100,
+          uploadedAt: doc.updated_at,
+        }))
+      );
+    };
+
+    fetchAllDocs();
+  }, []);
 
   return (
     <div className="flex-1 overflow-y-auto bg-white">
@@ -300,7 +295,7 @@ export default function FileTrainingPage() {
                               <div className="sm:hidden mt-1">
                                 {getStatusBadge(file.status)}
                               </div>
-                              {(file.status === "uploading" ||
+                              {(file.status === "pending" ||
                                 file.status === "processing") && (
                                 <div className="mt-2 sm:hidden">
                                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -325,7 +320,7 @@ export default function FileTrainingPage() {
                         <TableCell className="hidden sm:table-cell">
                           <div className="space-y-2">
                             {getStatusBadge(file.status)}
-                            {(file.status === "uploading" ||
+                            {(file.status === "pending" ||
                               file.status === "processing") && (
                               <div className="w-24">
                                 <div className="w-full bg-gray-200 rounded-full h-2">

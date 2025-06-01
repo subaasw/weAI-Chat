@@ -10,6 +10,7 @@ import AdminDashboard from "./pages/admin";
 import WebsiteTrainingPage from "./pages/admin/website";
 import FileTrainingPage from "./pages/admin/fileupload";
 import TestingPlaygroundPage from "./pages/admin/testing";
+import UsersPage from "./pages/admin/users";
 
 const ChatLayout = ({ children }: { children: React.ReactNode }) => {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -43,7 +44,7 @@ export default function RoutingPages() {
         <Route path="website" element={<WebsiteTrainingPage />} />
         <Route path="files" element={<FileTrainingPage />} />
         <Route path="testing" element={<TestingPlaygroundPage />} />
-        {/* <Route path="new" element={<NewChatPage />} /> */}
+        <Route path="users" element={<UsersPage />} />
         {/* <Route path=":conversationId" element={<ConversationPage />} /> */}
       </Route>
 

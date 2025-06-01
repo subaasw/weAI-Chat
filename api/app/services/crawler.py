@@ -68,9 +68,8 @@ async def crawl_website(url: str):
         if not result.success or not result.markdown:
             return
         
-
         title = result.metadata.get("title")
-        content = result.markdown.fit_markdown
+        content = result.markdown
 
         website_metadata.append({"title": title, "content": content, "link": link})
 

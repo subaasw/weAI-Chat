@@ -212,7 +212,7 @@ export class FileUploadService {
   ): Promise<FileCompleteResult> {
     try {
       const result: FileMetadata = await serverCall.post(
-        AdminEndpoints.train.doc,
+        AdminEndpoints.train.doc.base,
         {
           filename: fileName,
           size: fileSize,

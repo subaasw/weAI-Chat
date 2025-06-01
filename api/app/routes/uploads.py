@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 from core.config import CHUNKS_DIR, UPLOAD_DIR, PROCESSED_DIR
 
-Path(CHUNKS_DIR).mkdir(exist_ok=True)
+Path(CHUNKS_DIR).mkdir(exist_ok=True, parents=True)
 Path(UPLOAD_DIR).mkdir(exist_ok=True)
 Path(PROCESSED_DIR).mkdir(exist_ok=True)
 

@@ -39,6 +39,7 @@ const AdminEndpoints = {
   },
 
   testing: getFullURL("/admin/testing"),
+  dashboard: getFullURL("/admin/dashboard")
 };
 
 const FileUploadEndpoint = {

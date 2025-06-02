@@ -1,6 +1,8 @@
-"use client";
-
 import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { User, Settings, LogOut, ChevronUp } from "lucide-react";
+
+import { useAppContext } from "@/context/AppContextProvider";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,35 +11,38 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Settings, LogOut, ChevronUp } from "lucide-react";
-import { Link } from "react-router";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface ProfileDropdownProps {
   user?: {
     name: string;
     email: string;
-    avatar?: string;
   };
 }
 
+const defaultUser = {
+  name: "John Doe",
+  email: "john@example.com",
+  avatar: "",
+};
+
+const getInitials = (name: string) => {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+};
+
 export function ProfileDropdown({ user }: ProfileDropdownProps) {
+  const navigate = useNavigate();
+  const { logout } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
-
-  const defaultUser = {
-    name: "John Doe",
-    email: "john@example.com",
-    avatar: "",
-  };
-
   const currentUser = user || defaultUser;
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
   };
 
   return (
@@ -49,10 +54,6 @@ export function ProfileDropdown({ user }: ProfileDropdownProps) {
         >
           <div className="flex items-center space-x-3 w-full">
             <Avatar className="w-8 h-8">
-              <AvatarImage
-                src={currentUser.avatar || "/placeholder.svg"}
-                alt={currentUser.name}
-              />
               <AvatarFallback className="bg-blue-600 text-white text-sm">
                 {getInitials(currentUser.name)}
               </AvatarFallback>
@@ -82,19 +83,22 @@ export function ProfileDropdown({ user }: ProfileDropdownProps) {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/admin/profile" className="cursor-pointer">
-            <User className="w-4 h-4 mr-2" />
+            <User className="w-4 h-4" />
             Profile
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/admin/settings" className="cursor-pointer">
-            <Settings className="w-4 h-4 mr-2" />
+            <Settings className="w-4 h-4" />
             Settings
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer">
-          <LogOut className="w-4 h-4 mr-2" />
+        <DropdownMenuItem
+          className="text-red-600 focus:text-red-600 cursor-pointer"
+          onClick={handleLogout}
+        >
+          <LogOut className="w-4 h-4" />
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>

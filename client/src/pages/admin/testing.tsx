@@ -3,11 +3,6 @@ import {
   Send,
   TestTube,
   RotateCcw,
-  Copy,
-  ThumbsUp,
-  ThumbsDown,
-  Clock,
-  Target,
   MessageSquare,
   AlertCircle,
 } from "lucide-react";
@@ -228,48 +223,6 @@ export default function TestingPlaygroundPage() {
                       <p className="whitespace-pre-wrap leading-relaxed">
                         {message.content}
                       </p>
-
-                      {message.role === "assistant" && (
-                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200">
-                          <div className="flex items-center space-x-4 text-xs text-gray-500">
-                            <div className="flex items-center space-x-1">
-                              <Clock className="w-3 h-3" />
-                              <span>{message.responseTime}ms</span>
-                            </div>
-                            {message.confidence && (
-                              <div className="flex items-center space-x-1">
-                                <Target className="w-3 h-3" />
-                                <span>
-                                  {Math.round(message.confidence * 100)}%
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                            >
-                              <ThumbsUp className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                            >
-                              <ThumbsDown className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                            >
-                              <Copy className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))

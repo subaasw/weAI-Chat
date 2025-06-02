@@ -3,7 +3,7 @@ from fastapi import Depends, Request, HTTPException, status
 from sqlmodel import Session, select
 
 from core.db import get_session
-from core.db.models import Users
+from core.db.models import Users, UserType
 from helpers.cookie import CookieManager
 from helpers.tokens import verify_token
 
@@ -47,7 +47,7 @@ def require_admin(
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     
-    if user.type == "admin":
+    if user.type != UserType.admin:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     request.state.user = user

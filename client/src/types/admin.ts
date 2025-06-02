@@ -29,3 +29,10 @@ export type ConversationHistory = {
   title: string;
   messages: MessageHistory[];
 };
+
+export type DashboardProps = {
+  conversations: number;
+  messages: number;
+  sources: number;
+  users: number;
+};

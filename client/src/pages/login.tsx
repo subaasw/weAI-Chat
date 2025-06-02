@@ -15,12 +15,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 function LoginForm() {
+  const navigate = useNavigate();
+  const { userLogin } = useAppContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-  const { userLogin } = useAppContext();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +28,14 @@ function LoginForm() {
     setError("");
 
     try {
-      const { id } = await userLogin(email, password);
+      const { id, type } = await userLogin(email, password);
       if (id) {
         setTimeout(() => {
+          if (type === "admin") {
+            navigate("/admin");
+            return;
+          }
+
           navigate("/chat");
         }, 1000);
       } else {

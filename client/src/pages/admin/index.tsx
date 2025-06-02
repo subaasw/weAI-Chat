@@ -1,31 +1,58 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useLayoutEffect, useState } from "react";
 import { Link } from "react-router";
 import {
   Upload,
   Globe,
   TestTube,
   ArrowRight,
-  BookOpen,
   MessageSquare,
   Users,
   Database,
   Activity,
+  Users2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import AdminService from "@/utils/admin";
+import { DashboardProps } from "@/types/admin";
 
 interface DashbordWidgetCardProps {
   title: string;
   data: string | number;
-  desc: string;
   icon: ReactNode;
 }
 
-const DashbordWidgetCard = ({
-  title,
-  data,
-  desc,
-  icon,
-}: DashbordWidgetCardProps) => {
+const quickActions = [
+  {
+    title: "Train from Website",
+    description: "Scrape any website for training data",
+    icon: Globe,
+    href: "/admin/website",
+    color: "blue",
+  },
+  {
+    title: "Upload Files",
+    description: "Add documents and files to knowledge base",
+    icon: Upload,
+    href: "/admin/files",
+    color: "emerald",
+  },
+  {
+    title: "Test Chatbot",
+    description: "Interactive testing playground",
+    icon: TestTube,
+    href: "/admin/testing",
+    color: "purple",
+  },
+  {
+    title: "Users",
+    description: "All registered users.",
+    icon: Users2,
+    href: "/admin/users",
+    color: "orange",
+  },
+];
+
+const DashbordWidgetCard = ({ title, data, icon }: DashbordWidgetCardProps) => {
   return (
     <Card className="border shadow-none py-2 border-gray-200">
       <CardContent className="p-6">
@@ -33,7 +60,6 @@ const DashbordWidgetCard = ({
           <div>
             <p className="text-sm font-medium text-gray-600">{title}</p>
             <p className="text-xl font-bold text-gray-900 mt-1">{data}</p>
-            <p className="text-sm text-green-600 mt-1">{desc}</p>
           </div>
           <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center">
             {icon}
@@ -45,88 +71,21 @@ const DashbordWidgetCard = ({
 };
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    totalMessages: 15847,
-    totalUsers: 342,
-    totalConversations: 2156,
-    totalSources: 89,
+  const [stats, setStats] = useState<DashboardProps>({
+    messages: 0,
+    users: 0,
+    sources: 0,
+    conversations: 0,
   });
 
-  const [recentActivity] = useState([
-    {
-      type: "user",
-      title: "New User Registered",
-      description: "john.doe@example.com joined",
-      time: "2 min ago",
-      status: "new",
-    },
-    {
-      type: "message",
-      title: "High Message Volume",
-      description: "1,247 messages in last hour",
-      time: "5 min ago",
-      status: "active",
-    },
-    {
-      type: "conversation",
-      title: "New Conversation",
-      description: "Support inquiry started",
-      time: "12 min ago",
-      status: "active",
-    },
-    {
-      type: "source",
-      title: "Source Updated",
-      description: "FAQ database refreshed",
-      time: "1 hour ago",
-      status: "completed",
-    },
-  ]);
+  useLayoutEffect(() => {
+    const fetchStats = async () => {
+      const data = await AdminService.dashboardStats();
+      setStats(data);
+    };
 
-  const [quickActions] = useState([
-    {
-      title: "Train from Website",
-      description: "Scrape any website for training data",
-      icon: Globe,
-      href: "/admin/website",
-      color: "blue",
-    },
-    {
-      title: "Upload Files",
-      description: "Add documents and files to knowledge base",
-      icon: Upload,
-      href: "/admin/files",
-      color: "emerald",
-    },
-    {
-      title: "Test Chatbot",
-      description: "Interactive testing playground",
-      icon: TestTube,
-      href: "/admin/testing",
-      color: "purple",
-    },
-    {
-      title: "Knowledge Base",
-      description: "Manage and organize training data",
-      icon: BookOpen,
-      href: "/admin/knowledge",
-      color: "orange",
-    },
-  ]);
-
-  //   useEffect(() => {
-  //     // Simulate real-time updates
-  //     const interval = setInterval(() => {
-  //       setStats((prev) => ({
-  //         ...prev,
-  //         totalMessages: prev.totalMessages + Math.floor(Math.random() * 5),
-  //         totalConversations:
-  //           prev.totalConversations + Math.floor(Math.random() * 2),
-  //       }));
-  //     }, 10000);
-
-  //     return () => clearInterval(interval);
-  //   }, []);
+    fetchStats();
+  }, []);
 
   return (
     <div className="flex-1 overflow-y-auto bg-white">
@@ -142,29 +101,25 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <DashbordWidgetCard
               title="Total Messages"
-              data={stats.totalMessages.toLocaleString()}
-              desc="+247 today"
+              data={stats.messages}
               icon={<MessageSquare className="w-4 h-4 text-blue-600" />}
             />
 
             <DashbordWidgetCard
               title="Total Users"
-              data="342"
-              desc="+12 this week"
+              data={stats.users}
               icon={<Users className="w-4 h-4 text-emerald-600" />}
             />
 
             <DashbordWidgetCard
               title="Total Conversations"
-              data={stats.totalConversations.toLocaleString()}
-              desc="+89 today"
+              data={stats.conversations}
               icon={<Activity className="w-4 h-4 text-purple-600" />}
             />
 
             <DashbordWidgetCard
               title="Total Sources"
-              data={stats.totalSources}
-              desc="3 active jobs"
+              data={stats.sources}
               icon={<Database className="w-4 h-4 text-orange-600" />}
             />
           </div>

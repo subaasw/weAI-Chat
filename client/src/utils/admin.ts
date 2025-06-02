@@ -6,6 +6,7 @@ import {
 import {
   ConversationHistory,
   ConversationStats,
+  DashboardProps,
   UserChatStats,
 } from "@/types/admin";
 
@@ -77,5 +78,10 @@ export default class AdminService {
       AdminEndpoints.conversations.single(conversationId)
     );
     return conversation;
+  }
+
+  static async dashboardStats(): Promise<DashboardProps> {
+    const data: DashboardProps = await serverCall.get(AdminEndpoints.dashboard);
+    return data;
   }
 }

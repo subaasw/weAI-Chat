@@ -234,3 +234,20 @@ async def chat_testing(payload: AdminChatTesting):
         chat_with_gemini_stream(payload.message, payload.history),
         media_type="text/event-stream"
     )
+
+@admin_router.get("/dashboard")
+async def admin_dashboard(session: SessionDep):
+    user_count = session.exec(select(func.count()).select_from(Users)).one()
+    conversation_count = session.exec(select(func.count()).select_from(Conversations)).one()
+    training_url_count = session.exec(select(func.count()).select_from(TrainingWebsite)).one()
+    training_doc_count = session.exec(select(func.count()).select_from(TrainingDocs)).one()
+    chat_message_count = session.exec(select(func.count()).select_from(ChatMessages)).one()
+
+    result = {
+        "users": user_count,
+        "conversations": conversation_count,
+        "sources": training_url_count + training_doc_count,
+        "messages": chat_message_count
+    }
+
+    return result

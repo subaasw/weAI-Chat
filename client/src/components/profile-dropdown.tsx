@@ -82,13 +82,13 @@ export function ProfileDropdown({ user }: ProfileDropdownProps) {
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to="/admin/profile" className="cursor-pointer">
+          <Link to="#" className="cursor-pointer">
             <User className="w-4 h-4" />
             Profile
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="/admin/settings" className="cursor-pointer">
+          <Link to="#" className="cursor-pointer">
             <Settings className="w-4 h-4" />
             Settings
           </Link>

@@ -1,7 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Send,
   TestTube,
@@ -12,8 +9,15 @@ import {
   Clock,
   Target,
   MessageSquare,
+  AlertCircle,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { fetchSSE } from "@/lib/fetch-sse";
+import { AdminEndpoints } from "@/utils/api-constant";
 
 interface Message {
   id: string;
@@ -24,10 +28,16 @@ interface Message {
   confidence?: number;
 }
 
+interface ChatHistory {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export default function TestingPlaygroundPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,43 +52,88 @@ export default function TestingPlaygroundPage() {
     if (!input.trim()) return;
 
     const userMessage: Message = {
-      id: Math.random().toString(36).substr(2, 9),
-      content: input,
+      id: Math.random().toString(36).substring(2, 9),
+      content: input.trim(),
       role: "user",
       timestamp: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input.trim();
     setInput("");
     setIsLoading(true);
+    setError(null);
 
-    const startTime = Date.now();
+    const assistantResponseId = Math.random().toString(36).substring(2, 9);
+
+    const initialAssistantMessage: Message = {
+      id: assistantResponseId,
+      content: "",
+      role: "assistant",
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, initialAssistantMessage]);
 
     try {
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000 + Math.random() * 2000)
+      const history: ChatHistory[] = messages.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+
+      await fetchSSE(
+        AdminEndpoints.testing,
+        {
+          message: currentInput,
+          history: history,
+        },
+        (data) => {
+          setMessages((prev) => {
+            return prev.map((msg) =>
+              msg.id === assistantResponseId
+                ? { ...msg, content: msg.content + data }
+                : msg
+            );
+          });
+        },
+        () => {
+          setMessages((prev) => {
+            return prev.map((msg) =>
+              msg.id === assistantResponseId
+                ? {
+                    ...msg,
+                  }
+                : msg
+            );
+          });
+
+          setIsLoading(false);
+        }
       );
-
-      const responseTime = Date.now() - startTime;
-      const assistantMessage: Message = {
-        id: Math.random().toString(36).substr(2, 9),
-        content: `I understand you're asking about "${input}". Based on my training data, I can provide you with comprehensive assistance. This is a simulated response for testing purposes, demonstrating how the chatbot would handle your query in a real-world scenario.`,
-        role: "assistant",
-        timestamp: new Date().toISOString(),
-        responseTime,
-        confidence: 0.7 + Math.random() * 0.3,
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error("Test failed:", error);
-    } finally {
+      console.error("Chat API error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to get response";
+      setError(errorMessage);
+
+      setMessages((prev) => {
+        return prev.map((msg) =>
+          msg.id === assistantResponseId
+            ? {
+                ...msg,
+                content: `Error: ${errorMessage}`,
+              }
+            : msg
+        );
+      });
+
       setIsLoading(false);
     }
   };
 
   const clearChat = () => {
     setMessages([]);
+    setError(null);
   };
 
   return (
@@ -115,6 +170,23 @@ export default function TestingPlaygroundPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border-b border-red-200 p-4">
+          <div className="max-w-7xl mx-auto flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-red-600" />
+            <span className="text-sm text-red-700">API Error: {error}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setError(null)}
+              className="ml-auto text-red-600"
+            >
+              Dismiss
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 flex">
         <div className="flex-1 flex flex-col">
           <div className="flex-1 overflow-y-auto p-6">
@@ -130,8 +202,8 @@ export default function TestingPlaygroundPage() {
                         Start Testing Your Chatbot
                       </h3>
                       <p className="text-gray-600 text-sm max-w-md mx-auto mb-6">
-                        Send a message below or use one of the quick test
-                        scenarios to evaluate your chatbot's performance.
+                        Send a message below to test your chatbot's responses
+                        using the live API.
                       </p>
                     </div>
                   </div>
@@ -216,7 +288,7 @@ export default function TestingPlaygroundPage() {
                     placeholder="Type your test message here..."
                     disabled={isLoading}
                     rows={3}
-                    className="resize-none"
+                    className="resize-none text-foreground"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();

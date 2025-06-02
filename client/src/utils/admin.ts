@@ -3,7 +3,11 @@ import {
   TrainDocsPayload,
   WebsiteMetadata,
 } from "@/types/training";
-import { ConversationStats, UserChatStats } from "@/types/admin";
+import {
+  ConversationHistory,
+  ConversationStats,
+  UserChatStats,
+} from "@/types/admin";
 
 import serverCall from "@/lib/serverCall";
 import { AdminEndpoints } from "./api-constant";
@@ -64,5 +68,14 @@ export default class AdminService {
       AdminEndpoints.conversations.base
     );
     return conversations;
+  }
+
+  static async fetchConversationHistory(
+    conversationId: string
+  ): Promise<ConversationHistory> {
+    const conversation: ConversationHistory = await serverCall.get(
+      AdminEndpoints.conversations.single(conversationId)
+    );
+    return conversation;
   }
 }

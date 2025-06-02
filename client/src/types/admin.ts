@@ -15,3 +15,17 @@ export type ConversationStats = {
   userId: string;
   userName: string;
 };
+
+type MessageHistory = {
+  id: string;
+  content: string;
+  createdAt: string;
+  sender: "user" | "assistant";
+};
+
+export type ConversationHistory = {
+  userId: string;
+  userName: string;
+  title: string;
+  messages: MessageHistory[];
+};

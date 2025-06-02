@@ -3,15 +3,17 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse 
 from sqlmodel import Session, delete, select, func
 
 from core.db import get_session
 from core.db.models import (TrainingDocs, TrainingWebsite, Users, Conversations, ChatMessages, TrainingStatus, UserType)
-from core.schema import TrainingDocsModel, TrainingWebsiteModel
+from core.schema import TrainingDocsModel, TrainingWebsiteModel, AdminChatTesting
 from core.config import UPLOAD_DIR, PROCESSED_DIR
 from services.markdown_converter import convert_to_markdown
 from services.rag.retriever import ChromaDBManager
 from services.crawler import crawl_website
+from services.chat_with_gemini import chat_with_gemini_stream
 
 admin_router = APIRouter(prefix="/admin")
 
@@ -190,7 +192,45 @@ async def get_conversations(session: SessionDep):
 
 @admin_router.get("/conversations/{conversationId}")
 async def get_conversation_messages(conversationId: str, session: SessionDep):
-    statement = select(ChatMessages).where(ChatMessages.conversation_id == uuid.UUID(conversationId))
-    messages = session.exec(statement).fetchall()
+    stmt = (
+        select(
+            Users.id.label("userId"),
+            Users.name,
+            Conversations.title,
+            ChatMessages.id.label("messageId"),
+            ChatMessages.content,
+            ChatMessages.created_at,
+            ChatMessages.sender
+        )
+        .join(Users, Conversations.user_id == Users.id)
+        .join(ChatMessages, ChatMessages.conversation_id == Conversations.id)
+        .where(Conversations.id == uuid.UUID(conversationId))
+    )
 
-    return messages
+    results = session.exec(stmt).fetchmany()
+    if not results:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+    
+    conversation_info = {
+        "userId": results[0].userId,
+        "userName": results[0].name,
+        "title": results[0].title,
+        "messages": []
+    }
+
+    for row in results:
+        conversation_info["messages"].append({
+            "id": row.messageId,
+            "content": row.content,
+            "createdAt": row.created_at,
+            "sender": row.sender
+        })
+
+    return conversation_info
+
+@admin_router.post("/testing")
+async def chat_testing(payload: AdminChatTesting):
+    return StreamingResponse(
+        chat_with_gemini_stream(payload.message, payload.history),
+        media_type="text/event-stream"
+    )

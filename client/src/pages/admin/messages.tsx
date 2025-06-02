@@ -60,7 +60,6 @@ export default function MessagesPage() {
     <div className="flex-1 overflow-y-auto bg-gray-50">
       <div className="p-6 lg:p-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Header */}
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
             <p className="text-gray-600 mt-1">
@@ -120,7 +119,6 @@ export default function MessagesPage() {
             </CardContent>
           </Card>
 
-          {/* Conversations List */}
           <div className="space-y-3">
             {filteredConversations.map((conversation) => (
               <Link

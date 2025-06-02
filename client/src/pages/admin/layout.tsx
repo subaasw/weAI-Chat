@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import {
-  Settings,
   Globe,
   TestTube,
   Brain,
@@ -22,10 +21,8 @@ const navigation = [
   { name: "Website", href: "/admin/website", icon: Globe },
   { name: "Files", href: "/admin/files", icon: File },
   { name: "Testing", href: "/admin/testing", icon: TestTube },
-  { name: "Users", href: "/admin/users", icon: Users },
   { name: "Messages", href: "/admin/messages", icon: MessageSquare },
-  { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { name: "Settings", href: "/admin/settings", icon: Settings },
+  { name: "Users", href: "/admin/users", icon: Users },
 ];
 
 export default function AdminLayout() {

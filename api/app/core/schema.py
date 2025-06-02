@@ -57,3 +57,7 @@ class TrainingDocsModel(BaseModel):
 
 class TrainingWebsiteModel(BaseModel):
     url: str
+
+class AdminChatTesting(BaseModel):
+    message: str
+    history: List[ChatHistoryItem]

@@ -34,7 +34,11 @@ const AdminEndpoints = {
   },
   conversations: {
     base: getFullURL("/admin/conversations"),
+    single: (conversationId: string) =>
+      getFullURL(`/admin/conversations/${conversationId}`),
   },
+
+  testing: getFullURL("/admin/testing"),
 };
 
 const FileUploadEndpoint = {

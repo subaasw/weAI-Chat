@@ -111,7 +111,7 @@ export default function AdminLayout() {
         ) : null}
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+      <div className="flex-1 flex flex-col overflow-hidden h-full bg-gray-50">
         <Outlet />
       </div>
     </div>

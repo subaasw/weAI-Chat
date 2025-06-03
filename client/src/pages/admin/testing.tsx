@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import {
   Send,
   TestTube,
@@ -132,7 +133,7 @@ export default function TestingPlaygroundPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
+    <div className="flex-1 h-full flex flex-col bg-white">
       <div className="border-b border-gray-200 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -182,83 +183,79 @@ export default function TestingPlaygroundPage() {
         </div>
       )}
 
-      <div className="flex-1 flex">
-        <div className="flex-1 flex flex-col">
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-4xl mx-auto space-y-6">
-              {messages.length === 0 ? (
-                <div className="flex items-center justify-center h-full min-h-[400px]">
-                  <div className="text-center space-y-6">
-                    <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto">
-                      <MessageSquare className="w-10 h-10 text-blue-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                        Start Testing Your Chatbot
-                      </h3>
-                      <p className="text-gray-600 text-sm max-w-md mx-auto mb-6">
-                        Send a message below to test your chatbot's responses
-                        using the live API.
-                      </p>
-                    </div>
-                  </div>
+      <div className="flex-1 overflow-y-auto h-full p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full min-h-[400px]">
+              <div className="text-center space-y-6">
+                <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto">
+                  <MessageSquare className="w-10 h-10 text-blue-400" />
                 </div>
-              ) : (
-                messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={cn(
-                      "flex",
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "max-w-[80%] rounded-lg px-6 py-4",
-                        message.role === "user"
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-900 border border-gray-200"
-                      )}
-                    >
-                      <p className="whitespace-pre-wrap leading-relaxed">
-                        {message.content}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-
-          <div className="border-t border-gray-200 p-6">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex space-x-4">
-                <div className="flex-1">
-                  <Textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Type your test message here..."
-                    disabled={isLoading}
-                    rows={3}
-                    className="resize-none text-foreground"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                      }
-                    }}
-                  />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    Start Testing Your Chatbot
+                  </h3>
+                  <p className="text-gray-600 text-sm max-w-md mx-auto mb-6">
+                    Send a message below to test your chatbot's responses using
+                    the live API.
+                  </p>
                 </div>
-                <Button
-                  onClick={sendMessage}
-                  disabled={isLoading || !input.trim()}
-                  className="self-end bg-blue-600 hover:bg-blue-700"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
               </div>
             </div>
+          ) : (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={cn(
+                  "flex",
+                  message.role === "user" ? "justify-end" : "justify-start"
+                )}
+              >
+                <div
+                  className={cn(
+                    "max-w-[80%] rounded-lg px-6 py-4",
+                    message.role === "user"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-900 border border-gray-200"
+                  )}
+                >
+                  <p className="whitespace-pre-wrap leading-relaxed">
+                    <ReactMarkdown>{message.content || "..."}</ReactMarkdown>
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      <div className="border-t border-gray-200 p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex space-x-4">
+            <div className="flex-1">
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type your test message here..."
+                disabled={isLoading}
+                rows={3}
+                className="resize-none text-foreground"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+              />
+            </div>
+            <Button
+              onClick={sendMessage}
+              disabled={isLoading || !input.trim()}
+              className="self-end bg-blue-600 hover:bg-blue-700"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </div>

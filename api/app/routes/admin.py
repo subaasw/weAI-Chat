@@ -39,8 +39,7 @@ async def training_documents(doc: TrainingDocsModel, session: SessionDep):
 
     cromadb.upsert(
         documents=[content],
-        metadatas=[{"filename": doc.file_name}],
-        ids=[str(doc.id)],
+        documentId=str(doc.id),
     )
 
     return doc
@@ -94,13 +93,13 @@ async def training_website(website: TrainingWebsiteModel, session: SessionDep):
         file.write(websites[0]['content'])
     file.close()
 
-    cromadb.upsert(documents=[websites[0]['content']], ids=[str(main_website.id)])
+    cromadb.upsert(documents=[websites[0]['content']], documentId=str(main_website.id))
     for w in websites[1:]:
         new_website = TrainingWebsite(url=w['link'], parent_id=main_website.id, status=TrainingStatus.completed, character_count=len(w['content']))
         session.add(new_website)
         session.commit()
 
-        cromadb.upsert(documents=[w['content']], ids=[str(new_website.id)])
+        cromadb.upsert(documents=[w['content']], documentId=str(new_website.id))
         with open(f"{PROCESSED_DIR}/{str(new_website.id)}.md", "w") as file:
             file.write(w['content'])
         file.close()

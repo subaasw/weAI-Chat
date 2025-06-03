@@ -88,7 +88,9 @@ def chat_with_gemini_stream(message: str, history: Optional[List[HistoryItem]] =
                 )
             )
 
-    context = chromadb.query(query_texts=[message])
+    context = chromadb.query(query_texts=[message])[0]
+    context = '\n'.join(context) if isinstance(context, list) else context
+
     prompt = (
         """
         You are a helpful and informative bot that answers questions using
@@ -117,8 +119,7 @@ def chat_with_gemini_stream(message: str, history: Optional[List[HistoryItem]] =
         model=GEMINI_MODEL,
         config=types.GenerateContentConfig(
             system_instruction= "You are a helpful assistant",
-            temperature=1,
-            # max_output_tokens=500,
+            temperature=0.7,
         ),
         contents = contents
     ):
